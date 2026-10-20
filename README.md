@@ -5,7 +5,7 @@ A small, phone-first practice app for the California Class C written knowledge t
 - Random exams from a bank of about 450 questions: a full practice exam (36 questions by default) or a quick 10. The pass mark is 80%, the figure the DMV publishes.
 - The right answer and an explanation appear right after each answer, with a link to the Driver Handbook section it comes from where the handbook states it, also in the "Think this is wrong?" box.
 - Flag any question you think is wrong (with an optional note), review the flagged list, and open any question directly by link (`/#/q/<id>`).
-- Per-user history: score over time, per-topic accuracy (weakest first), and a review of missed questions.
+- Per-user history: score over time, a mastery bar across all questions, per-topic accuracy (weakest first), and a review of missed questions.
 - Sign in with any OpenID Connect provider (built for Pocket ID). The app keeps only the OIDC subject and display name.
 - One static Go binary, SQLite storage, rootless distroless image.
 
@@ -54,8 +54,28 @@ How it works:
 
 - An exam is created server-side with random questions and shuffled options, and stored as a snapshot. Answers and explanations are only sent to the browser after a question is answered.
 - Sessions are random tokens stored hashed in SQLite (30 days, `HttpOnly`, `SameSite=Lax`). Login uses the authorization code flow with PKCE, a nonce, and a state cookie bound to the browser.
-- Starting a new exam discards the user's unfinished one.
+- Starting a new exam marks the user's unfinished one as deleted.
 - Flags are per user and store the question text, so they stay readable if the bank changes. Question ids are a hash of the question text and are stable across regeneration unless the wording changes.
+
+## Mastery
+
+The Progress screen shows how much of the whole question bank the pupil has mastered. A question is **mastered** when they got it right the last time they saw it (in a finished test that has not been deleted), **missed** when they got it wrong the last time, and **unseen** otherwise. The bar is mastered divided by every question in the bank.
+
+## Deleting a test
+
+There is no delete button, on purpose. To delete a test, sign in, open that test's results page (from the Recent exams list on Progress), and add `/delete` to the end of the address:
+
+```text
+https://dmv.example.com/#/results/<test id>/delete
+```
+
+The page shows a warning and asks the pupil to type `DELETE` before the button works. Deleting removes the test from the progress graph, topic accuracy, mastery, and pass rate. Only the signed-in user's own tests can be deleted.
+
+Nothing is removed from the database: the test and its answers stay, and the test is only marked deleted (`exams.deleted_at` is set). To restore one, clear that column with SQL. Starting a new test also marks the user's unfinished test deleted this way.
+
+## Version
+
+The home screen footer shows the release tag and short git SHA. The image build stamps them in (`edge` for builds of `main`, the tag for releases), and a plain `go build` in a git checkout reports `dev` and the checkout's SHA. The same values are logged at startup.
 
 ## Questions
 

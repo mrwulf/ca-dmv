@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"slices"
 	"strconv"
 	"strings"
@@ -25,6 +26,41 @@ var webFS embed.FS
 
 //go:embed questions/questions.json
 var questionsJSON []byte
+
+// Set at build time with -ldflags "-X main.version=... -X main.commit=...". A plain `go build` inside
+// a git checkout falls back to the VCS information Go embeds.
+var (
+	version = "dev"
+	commit  string
+)
+
+// buildLabel returns the version and a short git SHA for display, for example ("v0.1.1", "3a957de").
+func buildLabel(version, commit string) (string, string) {
+	if commit == "" {
+		if info, ok := debug.ReadBuildInfo(); ok {
+			dirty := false
+			for _, kv := range info.Settings {
+				switch kv.Key {
+				case "vcs.revision":
+					commit = kv.Value
+				case "vcs.modified":
+					dirty = kv.Value == "true"
+				}
+			}
+			if commit != "" && dirty {
+				commit = shortSHA(commit) + "-dirty"
+			}
+		}
+	}
+	return version, shortSHA(commit)
+}
+
+func shortSHA(s string) string {
+	if len(s) > 7 && !strings.Contains(s, "-") {
+		return s[:7]
+	}
+	return s
+}
 
 type config struct {
 	listen       string
@@ -141,7 +177,8 @@ func run() error {
 		defer cancel()
 		srv.Shutdown(shutdown)
 	}()
-	slog.Info("listening", "addr", cfg.listen, "questions", len(bank))
+	ver, sha := buildLabel(version, commit)
+	slog.Info("listening", "addr", cfg.listen, "questions", len(bank), "version", ver, "commit", sha)
 	if err = srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
@@ -157,6 +194,7 @@ func (s *server) routes() http.Handler {
 	mux.Handle("GET /api/me", s.api(s.me))
 	mux.Handle("POST /api/exams", s.api(s.createExam))
 	mux.Handle("GET /api/exams/{id}", s.api(s.getExam))
+	mux.Handle("DELETE /api/exams/{id}", s.api(s.deleteExam))
 	mux.Handle("POST /api/exams/{id}/answer", s.api(s.answer))
 	mux.Handle("GET /api/stats", s.api(s.stats))
 	mux.Handle("GET /api/questions/{id}", s.api(s.getQuestion))
@@ -257,9 +295,10 @@ func (s *server) me(w http.ResponseWriter, r *http.Request, u user) error {
 	if err != nil {
 		return err
 	}
+	ver, sha := buildLabel(version, commit)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"name": u.Name, "active_exam": active, "lengths": s.lengths(),
-		"pass_percent": passPercent, "flag_count": len(flags),
+		"pass_percent": passPercent, "flag_count": len(flags), "version": ver, "commit": sha,
 	})
 	return nil
 }
@@ -368,7 +407,47 @@ func (s *server) stats(w http.ResponseWriter, r *http.Request, u user) error {
 	if err != nil {
 		return err
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"exams": exams, "topics": topics, "pass_percent": passPercent})
+	latest, err := s.st.latestAnswers(r.Context(), u.Sub)
+	if err != nil {
+		return err
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"exams": exams, "topics": topics, "pass_percent": passPercent, "mastery": s.mastery(latest),
+	})
+	return nil
+}
+
+type masteryView struct {
+	Total    int `json:"total"`
+	Mastered int `json:"mastered"`
+	Missed   int `json:"missed"`
+	Unseen   int `json:"unseen"`
+}
+
+// mastery counts a question as mastered when the user's latest answer to it was correct, as missed
+// when it was wrong, and as unseen when they have not answered it. Questions no longer in the bank
+// are ignored.
+func (s *server) mastery(latest map[string]bool) masteryView {
+	v := masteryView{Total: len(s.bank)}
+	for qid, ok := range latest {
+		if _, inBank := s.byID[qid]; !inBank {
+			continue
+		}
+		if ok {
+			v.Mastered++
+		} else {
+			v.Missed++
+		}
+	}
+	v.Unseen = v.Total - v.Mastered - v.Missed
+	return v
+}
+
+func (s *server) deleteExam(w http.ResponseWriter, r *http.Request, u user) error {
+	if err := s.st.deleteExam(r.Context(), u.Sub, r.PathValue("id")); err != nil {
+		return err
+	}
+	w.WriteHeader(http.StatusNoContent)
 	return nil
 }
 

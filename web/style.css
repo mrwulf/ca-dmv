@@ -114,3 +114,11 @@ textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg)
 details .flagbox { margin: 8px 0; }
 
 [hidden] { display: none !important; }
+
+input[type="text"] { width: 100%; min-height: 52px; padding: 10px 12px; font: inherit; letter-spacing: 0.1em; color: var(--text); background: var(--bg); border: 2px solid var(--line); border-radius: 12px; }
+input[type="text"]:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+label { font-weight: 600; }
+.danger-card { border: 2px solid var(--bad); background: var(--bad-bg); }
+button.danger { color: #fff; background: var(--bad); }
+button.danger:disabled { opacity: 0.45; }
+.footer { font-size: 0.8rem; margin-top: 24px; }

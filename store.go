@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS exams (
   sub TEXT NOT NULL REFERENCES users(sub) ON DELETE CASCADE,
   created_at INTEGER NOT NULL,
   finished_at INTEGER,
+  deleted_at INTEGER,
   total INTEGER NOT NULL,
   correct INTEGER NOT NULL DEFAULT 0,
   questions TEXT NOT NULL
@@ -79,7 +80,25 @@ func openStore(path string) (*store, error) {
 	if _, err := db.Exec(schema); err != nil {
 		return nil, fmt.Errorf("apply schema: %w", err)
 	}
+	if err := migrate(db); err != nil {
+		return nil, fmt.Errorf("migrate: %w", err)
+	}
 	return &store{db: db}, nil
+}
+
+// migrate brings a database created by an older version up to date. Tests are never removed:
+// deleting one only sets exams.deleted_at.
+func migrate(db *sql.DB) error {
+	var n int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('exams') WHERE name='deleted_at'`).Scan(&n); err != nil {
+		return err
+	}
+	if n == 0 {
+		if _, err := db.Exec(`ALTER TABLE exams ADD COLUMN deleted_at INTEGER`); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func randomToken() string {
@@ -202,7 +221,7 @@ func (s *store) createExam(ctx context.Context, sub string, qs []question) (stri
 		return "", err
 	}
 	defer tx.Rollback()
-	if _, err = tx.ExecContext(ctx, `DELETE FROM exams WHERE sub=? AND finished_at IS NULL`, sub); err != nil {
+	if _, err = tx.ExecContext(ctx, `UPDATE exams SET deleted_at=? WHERE sub=? AND finished_at IS NULL AND deleted_at IS NULL`, time.Now().Unix(), sub); err != nil {
 		return "", err
 	}
 	if _, err = tx.ExecContext(ctx, `INSERT INTO exams(id, sub, created_at, total, questions) VALUES (?,?,?,?,?)`,
@@ -221,7 +240,7 @@ func loadExam(ctx context.Context, q queryer, sub, id string) (*exam, error) {
 	e := &exam{ID: id, Answers: map[int]answer{}}
 	var raw string
 	var fin sql.NullInt64
-	err := q.QueryRowContext(ctx, `SELECT created_at, finished_at, total, correct, questions FROM exams WHERE id=? AND sub=?`, id, sub).
+	err := q.QueryRowContext(ctx, `SELECT created_at, finished_at, total, correct, questions FROM exams WHERE id=? AND sub=? AND deleted_at IS NULL`, id, sub).
 		Scan(&e.CreatedAt, &fin, &e.Total, &e.Correct, &raw)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, errNotFound
@@ -309,7 +328,7 @@ type activeExam struct {
 func (s *store) activeExam(ctx context.Context, sub string) (*activeExam, error) {
 	var a activeExam
 	err := s.db.QueryRowContext(ctx, `SELECT e.id, e.total, (SELECT COUNT(*) FROM answers WHERE exam_id=e.id)
-		FROM exams e WHERE e.sub=? AND e.finished_at IS NULL ORDER BY e.created_at DESC LIMIT 1`, sub).Scan(&a.ID, &a.Total, &a.Answered)
+		FROM exams e WHERE e.sub=? AND e.finished_at IS NULL AND e.deleted_at IS NULL ORDER BY e.created_at DESC LIMIT 1`, sub).Scan(&a.ID, &a.Total, &a.Answered)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -336,7 +355,7 @@ type topicStat struct {
 func (s *store) stats(ctx context.Context, sub string) ([]examSummary, []topicStat, error) {
 	exams := []examSummary{}
 	rows, err := s.db.QueryContext(ctx, `SELECT id, finished_at, correct, total FROM exams
-		WHERE sub=? AND finished_at IS NOT NULL ORDER BY finished_at DESC LIMIT 200`, sub)
+		WHERE sub=? AND finished_at IS NOT NULL AND deleted_at IS NULL ORDER BY finished_at DESC LIMIT 200`, sub)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -354,7 +373,7 @@ func (s *store) stats(ctx context.Context, sub string) ([]examSummary, []topicSt
 	}
 	topics := []topicStat{}
 	trows, err := s.db.QueryContext(ctx, `SELECT a.topic, SUM(a.is_correct), COUNT(*) FROM answers a
-		JOIN exams e ON e.id = a.exam_id WHERE e.sub=? AND e.finished_at IS NOT NULL GROUP BY a.topic`, sub)
+		JOIN exams e ON e.id = a.exam_id WHERE e.sub=? AND e.finished_at IS NOT NULL AND e.deleted_at IS NULL GROUP BY a.topic`, sub)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -421,4 +440,40 @@ func (s *store) flagNotes(ctx context.Context, sub string) (map[string]string, e
 		notes[f.QID] = f.Note
 	}
 	return notes, nil
+}
+
+// deleteExam marks one of the user's exams as deleted. Its rows stay in the database, but it no
+// longer appears anywhere or counts toward any statistic.
+func (s *store) deleteExam(ctx context.Context, sub, id string) error {
+	res, err := s.db.ExecContext(ctx, `UPDATE exams SET deleted_at=? WHERE id=? AND sub=? AND deleted_at IS NULL`, time.Now().Unix(), id, sub)
+	if err != nil {
+		return err
+	}
+	if n, err := res.RowsAffected(); err != nil {
+		return err
+	} else if n == 0 {
+		return errNotFound
+	}
+	return nil
+}
+
+// latestAnswers maps each question id to whether the user's most recent answer to it was correct,
+// over their finished exams that are not deleted.
+func (s *store) latestAnswers(ctx context.Context, sub string) (map[string]bool, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT a.qid, a.is_correct FROM answers a JOIN exams e ON e.id = a.exam_id
+		WHERE e.sub=? AND e.finished_at IS NOT NULL AND e.deleted_at IS NULL ORDER BY e.finished_at, e.rowid, a.pos`, sub)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	latest := map[string]bool{}
+	for rows.Next() {
+		var qid string
+		var ok int
+		if err = rows.Scan(&qid, &ok); err != nil {
+			return nil, err
+		}
+		latest[qid] = ok == 1
+	}
+	return latest, rows.Err()
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -211,6 +212,7 @@ func TestAPIRequiresSession(t *testing.T) {
 // apiClient calls the real handler chain with a signed-in session.
 type apiClient struct {
 	t       *testing.T
+	st      *store
 	h       http.Handler
 	cookie  *http.Cookie
 	baseURL string
@@ -232,7 +234,7 @@ func newAPIClient(t *testing.T) *apiClient {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return &apiClient{t: t, h: s.routes(), cookie: &http.Cookie{Name: sessionCookie, Value: tok}, baseURL: cfg.baseURL}
+	return &apiClient{t: t, st: st, h: s.routes(), cookie: &http.Cookie{Name: sessionCookie, Value: tok}, baseURL: cfg.baseURL}
 }
 
 func (c *apiClient) do(method, path string, body any, out any) int {
@@ -419,5 +421,166 @@ func TestShuffleSpreadsCorrectAnswer(t *testing.T) {
 		if share := float64(n) / float64(total); share < 0.20 || share > 0.30 {
 			t.Errorf("correct answer lands at position %d %.0f%% of the time, want about 25%% (counts %v)", pos, share*100, counts)
 		}
+	}
+}
+
+// finishExam creates an exam of n questions and answers every one with pick(q); it returns the exam id.
+func finishExam(t *testing.T, st *store, sub string, qs []question, pick func(q question) int) string {
+	t.Helper()
+	ctx := context.Background()
+	id, err := st.createExam(ctx, sub, qs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for pos, q := range qs {
+		if _, err = st.answerQuestion(ctx, sub, id, pos, pick(q)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return id
+}
+
+func rightAnswer(q question) int { return q.Answer }
+func wrongAnswer(q question) int { return (q.Answer + 1) % len(q.Options) }
+
+func TestDeleteExamIsSoft(t *testing.T) {
+	c := newAPIClient(t)
+	ctx := context.Background()
+	bank, _ := loadBank(questionsJSON)
+	id := finishExam(t, c.st, "user-1", buildExam(bank, 5), wrongAnswer)
+
+	var stats struct {
+		Exams   []examSummary `json:"exams"`
+		Topics  []topicStat   `json:"topics"`
+		Mastery masteryView   `json:"mastery"`
+	}
+	c.do("GET", "/api/stats", nil, &stats)
+	if len(stats.Exams) != 1 || len(stats.Topics) == 0 || stats.Mastery.Missed != 5 {
+		t.Fatalf("before delete: %+v", stats)
+	}
+
+	if code := c.do("DELETE", "/api/exams/"+id, nil, nil); code != http.StatusNoContent {
+		t.Fatalf("delete = %d", code)
+	}
+	if code := c.do("GET", "/api/exams/"+id, nil, nil); code != http.StatusNotFound {
+		t.Fatalf("deleted exam still readable: %d", code)
+	}
+	if code := c.do("DELETE", "/api/exams/"+id, nil, nil); code != http.StatusNotFound {
+		t.Fatalf("second delete = %d, want 404", code)
+	}
+	stats.Exams, stats.Topics = nil, nil
+	c.do("GET", "/api/stats", nil, &stats)
+	if len(stats.Exams) != 0 || len(stats.Topics) != 0 || stats.Mastery.Mastered+stats.Mastery.Missed != 0 {
+		t.Fatalf("deleted exam still counts: %+v", stats)
+	}
+
+	// Nothing is removed: the exam and its answers are still in the database, marked deleted.
+	var exams, answers int
+	var deletedAt sql.NullInt64
+	c.st.db.QueryRowContext(ctx, `SELECT COUNT(*), MAX(deleted_at) FROM exams WHERE id=?`, id).Scan(&exams, &deletedAt)
+	c.st.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM answers WHERE exam_id=?`, id).Scan(&answers)
+	if exams != 1 || answers != 5 || !deletedAt.Valid {
+		t.Fatalf("rows removed or unmarked: exams=%d answers=%d deleted_at=%v", exams, answers, deletedAt)
+	}
+}
+
+func TestDeleteExamOwnershipAndOrigin(t *testing.T) {
+	c := newAPIClient(t)
+	ctx := context.Background()
+	bank, _ := loadBank(questionsJSON)
+	id := finishExam(t, c.st, "user-1", buildExam(bank, 3), rightAnswer)
+	if err := c.st.deleteExam(ctx, "someone-else", id); err != errNotFound {
+		t.Fatalf("other user deleted the exam: %v", err)
+	}
+	r := httptest.NewRequest("DELETE", "/api/exams/"+id, nil)
+	r.AddCookie(c.cookie)
+	r.Header.Set("Origin", "https://evil.example")
+	w := httptest.NewRecorder()
+	c.h.ServeHTTP(w, r)
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("cross-origin delete = %d, want 403", w.Code)
+	}
+	if _, err := c.st.getExam(ctx, "user-1", id); err != nil {
+		t.Fatalf("exam was deleted: %v", err)
+	}
+}
+
+func TestMasteryUsesLatestAnswer(t *testing.T) {
+	c := newAPIClient(t)
+	bank, _ := loadBank(questionsJSON)
+	qs := bank[:4]
+	// First exam gets q0,q1 right and q2,q3 wrong; the second flips q1 and q2.
+	finishExam(t, c.st, "user-1", qs, func(q question) int {
+		if q.ID == qs[0].ID || q.ID == qs[1].ID {
+			return rightAnswer(q)
+		}
+		return wrongAnswer(q)
+	})
+	finishExam(t, c.st, "user-1", qs, func(q question) int {
+		if q.ID == qs[0].ID || q.ID == qs[2].ID {
+			return rightAnswer(q)
+		}
+		return wrongAnswer(q)
+	})
+	var stats struct{ Mastery masteryView }
+	c.do("GET", "/api/stats", nil, &stats)
+	m := stats.Mastery
+	// Latest: q0 right, q1 wrong, q2 right, q3 wrong.
+	if m.Total != len(bank) || m.Mastered != 2 || m.Missed != 2 || m.Unseen != len(bank)-4 {
+		t.Fatalf("mastery = %+v", m)
+	}
+}
+
+func TestMigrationAddsDeletedAt(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "old.db")
+	old, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The schema as shipped in v0.1.x, before deleted_at existed.
+	for _, q := range []string{
+		`CREATE TABLE users (sub TEXT PRIMARY KEY, name TEXT NOT NULL, created_at INTEGER NOT NULL)`,
+		`CREATE TABLE exams (id TEXT PRIMARY KEY, sub TEXT NOT NULL, created_at INTEGER NOT NULL, finished_at INTEGER, total INTEGER NOT NULL, correct INTEGER NOT NULL DEFAULT 0, questions TEXT NOT NULL)`,
+		`INSERT INTO users VALUES ('u','U',1)`,
+		`INSERT INTO exams VALUES ('e1','u',1,2,1,1,'[]')`,
+	} {
+		if _, err = old.Exec(q); err != nil {
+			t.Fatal(err)
+		}
+	}
+	old.Close()
+	st, err := openStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = st.getExam(context.Background(), "u", "e1"); err != nil {
+		t.Fatalf("existing exam unreadable after migration: %v", err)
+	}
+	if err = st.deleteExam(context.Background(), "u", "e1"); err != nil {
+		t.Fatalf("delete after migration: %v", err)
+	}
+	// Opening again must not try to add the column twice.
+	if _, err = openStore(path); err != nil {
+		t.Fatalf("reopen: %v", err)
+	}
+}
+
+func TestBuildLabel(t *testing.T) {
+	if v, c := buildLabel("v0.1.1", "3a957de0123456789abcdef"); v != "v0.1.1" || c != "3a957de" {
+		t.Fatalf("got %q %q", v, c)
+	}
+	if _, c := buildLabel("v0.1.1", "abc"); c != "abc" {
+		t.Fatalf("short sha changed: %q", c)
+	}
+}
+
+func TestMeReportsVersion(t *testing.T) {
+	oldV, oldC := version, commit
+	version, commit = "v9.9.9", "0123456789abcdef"
+	defer func() { version, commit = oldV, oldC }()
+	c := newAPIClient(t)
+	var me struct{ Version, Commit string }
+	if code := c.do("GET", "/api/me", nil, &me); code != 200 || me.Version != "v9.9.9" || me.Commit != "0123456" {
+		t.Fatalf("me = %d %+v", code, me)
 	}
 }

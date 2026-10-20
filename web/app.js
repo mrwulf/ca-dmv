@@ -165,6 +165,7 @@ async function home() {
         h("div", {}, h("b", {}, exams.length ? `${pct(passes, exams.length)}%` : "–"), h("span", {}, "passed"))),
       h("p", {}, h("a", { href: "#/progress" }, "See progress over time →")),
       h("p", {}, h("a", { href: "#/flagged" }, `Flagged questions (${me.flag_count}) →`))),
+    h("p", { class: "footer muted center" }, [me.version, me.commit].filter(Boolean).join(" · ")),
   );
 }
 
@@ -292,7 +293,7 @@ const accuracyClass = (p) => (p >= 80 ? "good" : p >= 65 ? "warn" : "bad");
 // ---------- Progress ----------
 
 async function progress() {
-  const { exams, topics, pass_percent: passPercent } = await api("/api/stats");
+  const { exams, topics, mastery, pass_percent: passPercent } = await api("/api/stats");
   const recent = exams.slice(-30);
 
   const nodes = [h("div", { class: "topbar" }, h("h1", {}, "Progress"), h("a", { href: "#/" }, "Home"))];
@@ -304,6 +305,8 @@ async function progress() {
   nodes.push(
     h("div", { class: "card" }, h("strong", {}, "Score per exam"), chart(recent, passPercent),
       h("p", { class: "muted" }, `Dashed line is the ${passPercent}% pass mark. Last 30 exams.`)),
+    h("h2", {}, "Mastery across all questions"),
+    masteryBar(mastery),
     h("h2", {}, "Topics, weakest first"),
     [...topics].sort((a, b) => a.correct / a.total - b.correct / b.total).map((t) =>
       h("div", { class: "topic" },
@@ -316,6 +319,16 @@ async function progress() {
         h("span", {}, `${e.correct}/${e.total} · ${pct(e.correct, e.total)}%`)))),
   );
   show(...nodes);
+}
+
+// A question counts as mastered when it was answered correctly the last time it was seen.
+function masteryBar(m) {
+  const p = pct(m.mastered, m.total);
+  return h("div", { class: "card" },
+    h("div", { class: "topic" },
+      h("div", { class: "row" }, h("strong", {}, `${p}% mastered`), h("span", { class: "muted" }, `${m.mastered} of ${m.total} questions`)),
+      bar(p, accuracyClass(p))),
+    h("p", { class: "muted" }, `${m.missed} missed the last time you saw them, ${m.unseen} not seen yet.`));
 }
 
 function chart(exams, passPercent) {
@@ -342,6 +355,45 @@ function chart(exams, passPercent) {
   svg.append(el("text", { x: L, y: H - 4 }, fmtDate(exams[0].finished_at)),
     el("text", { x: W - R, y: H - 4, "text-anchor": "end" }, fmtDate(exams[exams.length - 1].finished_at)));
   return svg;
+}
+
+// ---------- Delete a test (not linked from anywhere; add /delete to a results URL) ----------
+
+const CONFIRM_WORD = "DELETE";
+
+async function deleteTest(id) {
+  const view = await api(`/api/exams/${id}`);
+  const input = h("input", {
+    type: "text", autocomplete: "off", autocapitalize: "characters", spellcheck: "false",
+    "aria-label": `Type ${CONFIRM_WORD} to confirm`, placeholder: CONFIRM_WORD,
+  });
+  const go = h("button", { class: "danger", disabled: true }, "Delete this test permanently");
+  const status = h("p", { class: "muted", role: "status" });
+  input.addEventListener("input", () => (go.disabled = input.value.trim() !== CONFIRM_WORD));
+  go.addEventListener("click", async () => {
+    go.disabled = true;
+    try {
+      await send("DELETE", `/api/exams/${id}`);
+      location.hash = "#/progress";
+    } catch (e) {
+      status.textContent = "Could not delete this test. Try again.";
+      go.disabled = false;
+    }
+  });
+  show(
+    h("div", { class: "topbar" }, h("h1", {}, "Delete this test?"), h("a", { href: `#/results/${id}` }, "Cancel")),
+    h("div", { class: "card danger-card stack", role: "alert" },
+      h("strong", {}, "Warning: this removes the test and everything counted from it."),
+      h("p", {}, `This is the ${view.correct} of ${view.total} test${view.finished_at ? ` from ${fmtDate(view.finished_at)}` : ""}.`),
+      h("p", {}, "Its score disappears from your progress graph and its answers no longer count toward your topic accuracy, your mastery, or your pass rate."),
+      h("p", {}, "You cannot undo this from the app."),
+    ),
+    h("div", { class: "card stack" },
+      h("label", { for: "confirm" }, `To confirm, type ${CONFIRM_WORD} below.`),
+      input, go, status,
+      h("a", { class: "btn secondary", href: `#/results/${id}` }, "No, keep this test")),
+  );
+  input.id = "confirm";
 }
 
 // ---------- Single question (reachable by link) ----------
@@ -413,10 +465,10 @@ async function flagged() {
 // ---------- Router ----------
 
 function route() {
-  const [, page, id] = location.hash.split("/");
+  const [, page, id, action] = location.hash.split("/");
   const screens = {
     exam: () => id && exam(id),
-    results: () => id && results(id),
+    results: () => id && (action === "delete" ? deleteTest(id) : results(id)),
     q: () => id && practice(id),
     progress: () => progress(),
     flagged: () => flagged(),
