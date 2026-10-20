@@ -653,3 +653,84 @@ func TestFocusedTestTopicShowsInStats(t *testing.T) {
 		t.Fatalf("stats exams = %+v", stats.Exams)
 	}
 }
+
+func TestExamMasteryAndNewTopics(t *testing.T) {
+	c := newAPIClient(t)
+	bank, _ := loadBank(questionsJSON)
+	var freeway []question
+	for _, q := range bank {
+		if q.Topic == "freeway" {
+			freeway = append(freeway, q)
+		}
+	}
+	// First test: every freeway question wrong. Second: every one right, which completes the topic.
+	first := finishExam(t, c.st, "user-1", freeway, wrongAnswer)
+	second := finishExam(t, c.st, "user-1", freeway, rightAnswer)
+	third := finishExam(t, c.st, "user-1", freeway, rightAnswer)
+
+	view := func(id string) examView {
+		var v examView
+		if code := c.do("GET", "/api/exams/"+id, nil, &v); code != 200 {
+			t.Fatalf("get exam = %d", code)
+		}
+		return v
+	}
+	if m := view(first).Mastery; m == nil || m.BeforePct != 0 || m.AfterPct != 0 || len(m.NewTopics) != 0 {
+		t.Fatalf("first test mastery = %+v", m)
+	}
+	m := view(second).Mastery
+	wantPct := len(freeway) * 100 / len(bank)
+	if m == nil || m.BeforePct != 0 || m.AfterPct != wantPct || len(m.NewTopics) != 1 || m.NewTopics[0] != "freeway" {
+		t.Fatalf("second test mastery = %+v, want freeway completed at %d%%", m, wantPct)
+	}
+	// Redoing a topic that is already complete does not complete it again.
+	if m := view(third).Mastery; m == nil || len(m.NewTopics) != 0 || m.BeforePct != wantPct {
+		t.Fatalf("third test mastery = %+v", m)
+	}
+	// Viewing an old test reports what it changed back then, not what is true now.
+	if m := view(second).Mastery; m == nil || len(m.NewTopics) != 1 {
+		t.Fatalf("second test, viewed again: %+v", m)
+	}
+
+	var stats struct{ Mastery masteryView }
+	c.do("GET", "/api/stats", nil, &stats)
+	found := false
+	for _, tp := range stats.Mastery.Topics {
+		if tp.Topic == "freeway" {
+			found = true
+			if tp.Mastered != len(freeway) || tp.Total != len(freeway) {
+				t.Fatalf("freeway mastery = %+v", tp)
+			}
+		}
+	}
+	if !found || len(stats.Mastery.Topics) != len(TopicNames) {
+		t.Fatalf("topics in mastery: found=%v count=%d", found, len(stats.Mastery.Topics))
+	}
+}
+
+func TestMasteryAsOfOrdering(t *testing.T) {
+	st := newTestStore(t)
+	ctx := context.Background()
+	st.createSession(ctx, "u", "U", "", sessionTTL)
+	bank, _ := loadBank(questionsJSON)
+	qs := bank[:2]
+	wrong := finishExam(t, st, "u", qs, wrongAnswer)
+	right := finishExam(t, st, "u", qs, rightAnswer)
+	q := qs[0].ID
+	check := func(id string, includeSelf, want bool) {
+		t.Helper()
+		got, err := st.masteryAsOf(ctx, "u", id, includeSelf)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if v, ok := got[q]; (want && !(ok && v)) || (!want && ok && v) {
+			t.Fatalf("masteryAsOf(%s, self=%v)[q] = %v (present %v), want correct=%v", id[:4], includeSelf, v, ok, want)
+		}
+	}
+	check(wrong, true, false)  // after the wrong test: wrong
+	check(right, false, false) // just before the right test: still wrong
+	check(right, true, true)   // after the right test: right
+	if _, err := st.masteryAsOf(ctx, "other", right, true); err != errNotFound {
+		t.Fatalf("other user read it: %v", err)
+	}
+}

@@ -327,6 +327,7 @@ type examView struct {
 	ID         string         `json:"id"`
 	Total      int            `json:"total"`
 	Topic      string         `json:"topic,omitempty"`
+	Mastery    *examMastery   `json:"mastery,omitempty"`
 	PassNeeded int            `json:"pass_needed"`
 	Correct    int            `json:"correct"`
 	Finished   bool           `json:"finished"`
@@ -400,12 +401,54 @@ func (s *server) createExam(w http.ResponseWriter, r *http.Request, u user) erro
 	return s.respondExam(w, r, u, http.StatusCreated, e)
 }
 
+// examMastery is how one finished test moved the user's mastery: the percentage before and after,
+// and any category that became fully mastered because of it.
+type examMastery struct {
+	BeforePct int      `json:"before_pct"`
+	AfterPct  int      `json:"after_pct"`
+	NewTopics []string `json:"new_topics,omitempty"`
+}
+
+func (s *server) examMastery(ctx context.Context, sub, examID string) (*examMastery, error) {
+	beforeAnswers, err := s.st.masteryAsOf(ctx, sub, examID, false)
+	if err != nil {
+		return nil, err
+	}
+	afterAnswers, err := s.st.masteryAsOf(ctx, sub, examID, true)
+	if err != nil {
+		return nil, err
+	}
+	before, after := s.mastery(beforeAnswers), s.mastery(afterAnswers)
+	m := &examMastery{BeforePct: before.Mastered * 100 / max(before.Total, 1), AfterPct: after.Mastered * 100 / max(after.Total, 1)}
+	was := map[string]bool{}
+	for _, t := range before.Topics {
+		was[t.Topic] = t.Mastered == t.Total
+	}
+	for _, t := range after.Topics {
+		if t.Mastered == t.Total && !was[t.Topic] {
+			m.NewTopics = append(m.NewTopics, t.Topic)
+		}
+	}
+	return m, nil
+}
+
 func (s *server) getExam(w http.ResponseWriter, r *http.Request, u user) error {
 	e, err := s.st.getExam(r.Context(), u.Sub, r.PathValue("id"))
 	if err != nil {
 		return err
 	}
-	return s.respondExam(w, r, u, http.StatusOK, e)
+	notes, err := s.st.flagNotes(r.Context(), u.Sub)
+	if err != nil {
+		return err
+	}
+	v := viewExam(e, notes)
+	if v.Finished {
+		if v.Mastery, err = s.examMastery(r.Context(), u.Sub, e.ID); err != nil {
+			return err
+		}
+	}
+	writeJSON(w, http.StatusOK, v)
+	return nil
 }
 
 func (s *server) answer(w http.ResponseWriter, r *http.Request, u user) error {
@@ -438,11 +481,18 @@ func (s *server) stats(w http.ResponseWriter, r *http.Request, u user) error {
 	return nil
 }
 
+type topicMastery struct {
+	Topic    string `json:"topic"`
+	Mastered int    `json:"mastered"`
+	Total    int    `json:"total"`
+}
+
 type masteryView struct {
-	Total    int `json:"total"`
-	Mastered int `json:"mastered"`
-	Missed   int `json:"missed"`
-	Unseen   int `json:"unseen"`
+	Total    int            `json:"total"`
+	Mastered int            `json:"mastered"`
+	Missed   int            `json:"missed"`
+	Unseen   int            `json:"unseen"`
+	Topics   []topicMastery `json:"topics"`
 }
 
 // mastery counts a question as mastered when the user's latest answer to it was correct, as missed
@@ -450,17 +500,32 @@ type masteryView struct {
 // are ignored.
 func (s *server) mastery(latest map[string]bool) masteryView {
 	v := masteryView{Total: len(s.bank)}
+	perTopic := map[string]*topicMastery{}
+	for _, q := range s.bank {
+		t, ok := perTopic[q.Topic]
+		if !ok {
+			t = &topicMastery{Topic: q.Topic}
+			perTopic[q.Topic] = t
+		}
+		t.Total++
+	}
 	for qid, ok := range latest {
-		if _, inBank := s.byID[qid]; !inBank {
+		q, inBank := s.byID[qid]
+		if !inBank {
 			continue
 		}
 		if ok {
 			v.Mastered++
+			perTopic[q.Topic].Mastered++
 		} else {
 			v.Missed++
 		}
 	}
 	v.Unseen = v.Total - v.Mastered - v.Missed
+	for _, t := range perTopic {
+		v.Topics = append(v.Topics, *t)
+	}
+	slices.SortFunc(v.Topics, func(a, b topicMastery) int { return strings.Compare(a.Topic, b.Topic) })
 	return v
 }
 

@@ -485,6 +485,42 @@ func (s *store) deleteExam(ctx context.Context, sub, id string) error {
 	return nil
 }
 
+// masteryAsOf is latestAnswers as of one finished exam: only the user's finished, non-deleted exams
+// up to that one, in the order they were finished. includeSelf says whether the exam itself counts,
+// so comparing the two shows what that exam changed.
+func (s *store) masteryAsOf(ctx context.Context, sub, examID string, includeSelf bool) (map[string]bool, error) {
+	var finished, rowid int64
+	err := s.db.QueryRowContext(ctx, `SELECT finished_at, rowid FROM exams
+		WHERE id=? AND sub=? AND finished_at IS NOT NULL AND deleted_at IS NULL`, examID, sub).Scan(&finished, &rowid)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, errNotFound
+	} else if err != nil {
+		return nil, err
+	}
+	cmp := "<"
+	if includeSelf {
+		cmp = "<="
+	}
+	rows, err := s.db.QueryContext(ctx, `SELECT a.qid, a.is_correct FROM answers a JOIN exams e ON e.id = a.exam_id
+		WHERE e.sub=? AND e.finished_at IS NOT NULL AND e.deleted_at IS NULL
+		AND (e.finished_at < ? OR (e.finished_at = ? AND e.rowid `+cmp+` ?))
+		ORDER BY e.finished_at, e.rowid, a.pos`, sub, finished, finished, rowid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	latest := map[string]bool{}
+	for rows.Next() {
+		var qid string
+		var ok int
+		if err = rows.Scan(&qid, &ok); err != nil {
+			return nil, err
+		}
+		latest[qid] = ok == 1
+	}
+	return latest, rows.Err()
+}
+
 // latestAnswers maps each question id to whether the user's most recent answer to it was correct,
 // over their finished exams that are not deleted.
 func (s *store) latestAnswers(ctx context.Context, sub string) (map[string]bool, error) {

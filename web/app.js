@@ -67,11 +67,9 @@ const fmtDate = (unix) => new Date(unix * 1000).toLocaleDateString(undefined, { 
 const fmtDateTime = (unix) =>
   new Date(unix * 1000).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
-// Set when a test has just been finished, so its results page celebrates once. Reopening an old
-// result later does not.
-let celebrateId = null;
-
-// A short burst of confetti on a canvas over the page. Skipped for people who prefer reduced motion.
+// A burst of confetti on a canvas over the page. It starts with pieces already on screen so it
+// reads as instant, keeps raining for a few seconds, then fades. Skipped for people who prefer
+// reduced motion.
 function confetti(count) {
   if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const canvas = h("canvas", { class: "confetti", "aria-hidden": "true" });
@@ -81,32 +79,135 @@ function confetti(count) {
   canvas.height = innerHeight * dpr;
   const ctx = canvas.getContext("2d");
   const colors = ["#f59e0b", "#ef4444", "#10b981", "#3b82f6", "#a855f7", "#ec4899"];
-  const bits = Array.from({ length: count }, () => ({
-    x: Math.random() * innerWidth, y: -20 - Math.random() * innerHeight * 0.5,
-    vx: (Math.random() - 0.5) * 4, vy: 2 + Math.random() * 4,
+  const RAIN_MS = 4500; // pieces that fall off the bottom restart at the top until then
+  const TOTAL_MS = 7000;
+  const place = (b, onScreen) => Object.assign(b, {
+    x: Math.random() * innerWidth,
+    y: onScreen ? Math.random() * innerHeight * 0.5 : -20 - Math.random() * 80,
+    vx: (Math.random() - 0.5) * 5, vy: 1.5 + Math.random() * 3,
     w: 6 + Math.random() * 6, h: 8 + Math.random() * 8,
     r: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3,
     color: colors[Math.floor(Math.random() * colors.length)],
-  }));
+  });
+  const bits = Array.from({ length: count }, () => place({}, true));
   const start = performance.now();
+  let last = start;
   const frame = (now) => {
     const t = now - start;
+    const k = Math.min(3, (now - last) / 16.67); // keep the same speed at 60 and 120 Hz
+    last = now;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, innerWidth, innerHeight);
     for (const b of bits) {
-      b.x += b.vx; b.y += b.vy; b.vy += 0.05; b.r += b.vr;
+      b.x += b.vx * k;
+      b.y += b.vy * k;
+      b.vy = Math.min(b.vy + 0.05 * k, 4.5);
+      b.r += b.vr * k;
+      if (b.y > innerHeight + 20 && t < RAIN_MS) place(b, false);
       ctx.save();
       ctx.translate(b.x, b.y);
       ctx.rotate(b.r);
-      ctx.globalAlpha = Math.max(0, Math.min(1, (3600 - t) / 1000));
+      ctx.globalAlpha = Math.max(0, Math.min(1, (TOTAL_MS - t) / 1200));
       ctx.fillStyle = b.color;
       ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
       ctx.restore();
     }
-    if (t < 3600) requestAnimationFrame(frame);
+    if (t < TOTAL_MS) requestAnimationFrame(frame);
     else canvas.remove();
   };
   requestAnimationFrame(frame);
+}
+
+// Celebrate the moment a finished test's results are opened: more for a perfect score.
+function celebrate(view) {
+  if (view.correct === view.total) confetti(220);
+  else if (view.correct >= view.pass_needed) confetti(100);
+}
+
+// ---------- Practice streaks and achievements (days are the user's local calendar days) ----------
+
+const dayKey = (d) => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+const noon = (d) => {
+  const x = new Date(d);
+  x.setHours(12, 0, 0, 0); // noon keeps day arithmetic safe across daylight saving changes
+  return x;
+};
+const addDays = (d, n) => {
+  const x = noon(d);
+  x.setDate(x.getDate() + n);
+  return x;
+};
+const practiceDays = (exams) => new Set(exams.map((e) => dayKey(new Date(e.finished_at * 1000))));
+
+// streakEnding counts consecutive practiced days going back from day.
+function streakEnding(days, day) {
+  let n = 0;
+  for (let d = noon(day); days.has(dayKey(d)); d = addDays(d, -1)) n++;
+  return n;
+}
+
+function longestStreak(exams) {
+  const unique = [...new Map(exams.map((e) => {
+    const d = noon(new Date(e.finished_at * 1000));
+    return [dayKey(d), d];
+  })).values()].sort((a, b) => a - b);
+  let best = 0, run = 0, prev = null;
+  for (const d of unique) {
+    run = prev && dayKey(addDays(prev, 1)) === dayKey(d) ? run + 1 : 1;
+    best = Math.max(best, run);
+    prev = d;
+  }
+  return best;
+}
+
+// The home card: the current streak, a hint, and the last seven days. The streak stays alive until
+// the end of today, so a missing test today does not break it yet.
+function streakCard(exams) {
+  const days = practiceDays(exams);
+  const today = new Date();
+  const doneToday = days.has(dayKey(today));
+  const n = streakEnding(days, doneToday ? today : addDays(today, -1));
+  const best = longestStreak(exams);
+  const hint = doneToday ? "You practiced today. Come back tomorrow to keep it going."
+    : n > 0 ? "Finish a test today to keep it going." : "Finish a test today to begin.";
+  const week = Array.from({ length: 7 }, (_, i) => addDays(today, i - 6));
+  const practiced = week.filter((d) => days.has(dayKey(d))).length;
+  return h("div", { class: "card stack" },
+    h("strong", {}, n > 0 ? `🔥 ${n}-day practice streak` : "Start a practice streak"),
+    h("div", { class: "week", role: "img", "aria-label": `Practiced on ${practiced} of the last 7 days` },
+      week.map((d) => {
+        const done = days.has(dayKey(d));
+        return h("div", { class: `day${done ? " done" : ""}${dayKey(d) === dayKey(today) ? " today" : ""}` },
+          h("span", { class: "dot" }, done ? "✓" : ""),
+          h("span", { class: "dow" }, d.toLocaleDateString(undefined, { weekday: "narrow" })));
+      })),
+    h("p", { class: "muted" }, hint + (best >= 2 && best > n ? ` Longest streak: ${best} days.` : "")));
+}
+
+// Achievements for one finished test, as they were when it was taken. exams is the user's finished
+// tests oldest first; view.mastery says how this test moved mastery.
+function achievements(view, exams) {
+  const chips = [];
+  const i = exams.findIndex((e) => e.id === view.id);
+  if (i >= 0) {
+    const e = exams[i];
+    const kind = (x) => `${x.total}|${x.topic || ""}`;
+    const earlier = exams.slice(0, i).filter((x) => kind(x) === kind(e));
+    if (earlier.length >= 2 && pct(e.correct, e.total) > Math.max(...earlier.map((x) => pct(x.correct, x.total)))) {
+      chips.push("🏆 New personal best");
+    }
+    const day = new Date(e.finished_at * 1000);
+    const firstToday = !exams.slice(0, i).some((x) => dayKey(new Date(x.finished_at * 1000)) === dayKey(day));
+    const n = streakEnding(practiceDays(exams.slice(0, i + 1)), day);
+    if (firstToday && n >= 2) chips.push(`🔥 Day ${n} of your practice streak`);
+  }
+  const m = view.mastery;
+  if (m) {
+    const hit = [100, 75, 50, 25].find((t) => m.before_pct < t && m.after_pct >= t);
+    if (hit) chips.push(hit === 100 ? "🏅 Every question mastered!" : `🏅 ${hit}% of all questions mastered`);
+    for (const t of m.new_topics || []) chips.push(`⭐ Mastered every question in ${topicName(t)}`);
+  }
+  return chips;
 }
 
 // Navigation controls share one look: accent text, no underline, a comfortable tap target.
@@ -207,6 +308,7 @@ async function home() {
       h("button", { onclick: () => start(full).catch(showError) }, `Full practice exam (${full} questions)`),
       h("button", { class: "secondary", onclick: () => start(quick).catch(showError) }, `Quick quiz (${quick} questions)`),
       h("p", { class: "muted center" }, `The DMV pass mark is ${me.pass_percent}%. The number of questions on the real test may differ from this practice exam.`)),
+    streakCard(exams),
     h("div", { class: "card stack" },
       h("div", { class: "stats" },
         h("div", {}, h("b", {}, String(exams.length)), h("span", {}, "exams taken")),
@@ -249,7 +351,7 @@ async function exam(id) {
       view = await api(`/api/exams/${id}/answer`, { pos, choice });
       drawQuestion(view, pos, view.questions[pos], () => {
         if (view.finished) {
-          celebrateId = id;
+          celebrate(view);
           location.hash = `#/results/${id}`;
         } else draw();
       });
@@ -310,18 +412,13 @@ function drawQuestion(view, pos, answered, onNext) {
 // ---------- Results ----------
 
 async function results(id) {
-  const view = await api(`/api/exams/${id}`);
+  const [view, stats] = await Promise.all([api(`/api/exams/${id}`), api("/api/stats")]);
   if (!view.finished) {
     location.hash = `#/exam/${id}`;
     return;
   }
   const passed = view.correct >= view.pass_needed;
   const perfect = view.correct === view.total;
-  if (celebrateId === id) {
-    celebrateId = null;
-    if (perfect) confetti(160);
-    else if (passed) confetti(70);
-  }
   const byTopic = {};
   for (const q of view.questions) {
     const t = (byTopic[q.topic] ||= { c: 0, n: 0 });
@@ -329,6 +426,7 @@ async function results(id) {
     if (q.chosen === q.correct_index) t.c++;
   }
   const missed = view.questions.filter((q) => q.chosen !== q.correct_index);
+  const chips = achievements(view, stats.exams);
   const again = async (length) => {
     const e = await api("/api/exams", { length });
     location.hash = `#/exam/${e.id}`;
@@ -342,6 +440,7 @@ async function results(id) {
       view.finished_at && h("p", { class: "muted" }, fmtDateTime(view.finished_at)),
       view.topic && h("p", { class: "muted" }, `Focused test: ${topicName(view.topic)}`),
       h("p", { class: "muted" }, `${pct(view.correct, view.total)}% · ${view.pass_needed} correct needed to pass (80%)`)),
+    chips.length > 0 && h("div", { class: "badges" }, chips.map((c) => h("div", { class: "badge" }, c))),
     h("div", { class: "stack" },
       h("button", { onclick: () => again(view.total).catch(showError) }, "Take another one"),
       h("button", { class: "secondary", onclick: () => (location.hash = "#/progress") }, "See progress")),
@@ -371,6 +470,7 @@ async function progress() {
   const { exams, topics, mastery, pass_percent: passPercent } = await api("/api/stats");
   const recent = exams.slice(-30);
 
+  const mastered = new Set(mastery.topics.filter((t) => t.mastered === t.total).map((t) => t.topic));
   const nodes = [h("div", { class: "topbar" }, h("h1", {}, "Progress"), homeLink())];
   if (!exams.length) {
     nodes.push(h("div", { class: "card" }, h("p", {}, "Finish an exam to see your progress here.")));
@@ -385,7 +485,7 @@ async function progress() {
     h("h2", {}, "Topics, weakest first"),
     [...topics].sort((a, b) => a.correct / a.total - b.correct / b.total).map((t) =>
       h("div", { class: "topic" },
-        h("div", { class: "row" }, h("span", {}, topicName(t.topic)), h("span", { class: "muted" }, `${pct(t.correct, t.total)}% of ${t.total}`)),
+        h("div", { class: "row" }, h("span", {}, mastered.has(t.topic) ? `${topicName(t.topic)} ⭐` : topicName(t.topic)), h("span", { class: "muted" }, `${pct(t.correct, t.total)}% of ${t.total}`)),
         bar(pct(t.correct, t.total), accuracyClass(pct(t.correct, t.total))))),
     h("h2", {}, "Recent exams"),
     h("div", { class: "list" }, [...exams].reverse().slice(0, 20).map((e) =>
@@ -415,7 +515,8 @@ function masteryBar(m) {
     h("div", { class: "topic" },
       h("div", { class: "row" }, h("strong", {}, `${p}% mastered`), h("span", { class: "muted" }, `${m.mastered} of ${m.total} questions`)),
       bar(p, accuracyClass(p))),
-    h("p", { class: "muted" }, `${m.missed} missed the last time you saw them, ${m.unseen} not seen yet.`));
+    h("p", { class: "muted" }, `${m.missed} missed the last time you saw them, ${m.unseen} not seen yet.`),
+    h("p", { class: "muted" }, `⭐ ${m.topics.filter((t) => t.mastered === t.total).length} of ${m.topics.length} topics fully mastered.`));
 }
 
 function chart(exams, passPercent) {
