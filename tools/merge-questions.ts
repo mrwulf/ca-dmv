@@ -90,8 +90,6 @@ D("alcohol", "When is it legal for a person to drive with an alcoholic beverage 
 
 // Questions the current Driver Handbook contradicts or does not support. Dropped, not rewritten.
 const DROP = new Set([
-  // Claims hazard-light vehicles are covered; the handbook lists emergency, tow and road work vehicles only.
-  "As of 2026, California's 'Slow Down, Move Over' law also covers:",
   // The handbook gives the three-second rule and no four-second rule.
   "You should increase your following distance to at least 4 seconds when:",
 ]);
@@ -127,11 +125,24 @@ const CORRECTIONS: { question: string; options: string[]; answer: string; explan
     explanation: "Never make a U-turn where a NO U-TURN sign is posted, at or on a railroad crossing, on a one-way street, in front of a fire station, or when you cannot see clearly for 200 feet in each direction. You may U-turn across a double yellow line.",
   },
 ];
-// Explanations that cite law the handbook does not mention; trimmed to what it supports.
+// Law that changed on 2026-01-01 and that the Driver Handbook does not reflect yet. Sourced to the CHP.
+const CHP_2026 = "https://www.chp.ca.gov/news-alerts/news-list/new-year-new-laws--chp-highlights-public-safety-laws-taking-effect-in-2026/";
+const EXTERNAL_SOURCES: { question: string; url: string; label: string }[] = [
+  {
+    question: "As of 2026, California's 'Slow Down, Move Over' law also covers:",
+    url: CHP_2026, label: "CHP: new laws for 2026 (AB 390)",
+  },
+];
+
+// Explanations rewritten to match current law and its sources.
 const EXPLANATION_FIXES: { question: string; explanation: string }[] = [
   {
+    question: "As of 2026, California's 'Slow Down, Move Over' law also covers:",
+    explanation: "AB 390, effective January 1, 2026, widens the Move Over law: move out of the lane next to any highway maintenance vehicle or stationary vehicle using flashing hazard lights or warning devices such as cones or flares, or slow to a safe speed if you cannot change lanes.",
+  },
+  {
     question: "Near a school while children are outside or crossing, unless a lower limit is posted, the speed limit is:",
-    explanation: "The speed limit is 25 mph within 500 feet of a school while children are outside or crossing the street. Some school zones are posted lower, as low as 15 mph. Always obey the posted sign.",
+    explanation: "The speed limit is 25 mph within 500 feet of a school while children are outside or crossing the street. Some school zones are posted lower, as low as 15 mph. Since January 1, 2026 (AB 382), cities and counties may post 20 mph, and 20 mph becomes the limit in signed school zones statewide from 2031. Always obey the posted sign.",
   },
 ];
 for (const f of EXPLANATION_FIXES) {
@@ -193,6 +204,13 @@ for (const q of kept) {
   q.sourceUrl = `${HB}${e.page}/#:~:text=${frag(e.fragment ?? e.heading)}`;
   q.sourceLabel = `Driver Handbook §${e.num}, ${e.heading}`;
   linked++;
+}
+for (const x of EXTERNAL_SOURCES) {
+  const q = kept.find((k) => k.question === x.question);
+  if (!q) throw new Error("external source target not found: " + x.question);
+  if (!q.sourceUrl) linked++;
+  q.sourceUrl = x.url;
+  q.sourceLabel = x.label;
 }
 const stale = Object.keys(sources).filter((id) => !kept.some((q) => q.id === id));
 if (stale.length) console.warn(`sources.json has ${stale.length} ids not in the bank:`, stale.slice(0, 5));

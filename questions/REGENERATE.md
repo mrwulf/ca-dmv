@@ -28,6 +28,8 @@ To redo the mapping (about 45 minutes of review for ~450 questions):
 
 Only count a section as the source if its text states the answer. A section that merely covers the topic is not enough, and the Caltrans sign charts page is not a source for sign colors (it does not state them).
 
+Law that changed after the handbook was last revised (for example AB 390 Move Over and AB 382 school zones, both effective 2026-01-01) is kept, with the CHP's announcement as the source, in `EXTERNAL_SOURCES` in `tools/merge-questions.ts`. Do not drop a question only because the handbook has not caught up; confirm the change with an official source (CHP, DMV, or the legislature) first, and re-check whether the handbook has been updated at each refresh. The DMV knowledge test is based on the handbook, so such a question may not appear on the real test yet.
+
 While doing this the review found answers the current handbook contradicts. They are fixed or dropped in `CORRECTIONS`, `EXPLANATION_FIXES` and `DROP` in `tools/merge-questions.ts`, with `TestCorrectedAnswers` pinning the fixes. Re-run the numeric check in step 4 (every number in a correct answer should appear in its section) whenever the handbook is revised; insurance minimums, following distances, and speed limits are the likely ones to drift.
 
 ## Steps

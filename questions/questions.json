@@ -1382,7 +1382,7 @@
    "40 mph"
   ],
   "answer": 0,
-  "explanation": "The speed limit is 25 mph within 500 feet of a school while children are outside or crossing the street. Some school zones are posted lower, as low as 15 mph. Always obey the posted sign.",
+  "explanation": "The speed limit is 25 mph within 500 feet of a school while children are outside or crossing the street. Some school zones are posted lower, as low as 15 mph. Since January 1, 2026 (AB 382), cities and counties may post 20 mph, and 20 mph becomes the limit in signed school zones statewide from 2031. Always obey the posted sign.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Around%20Children",
   "sourceLabel": "Driver Handbook §7, Around Children"
@@ -2402,6 +2402,21 @@
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Drivers%20must%20move%20over%20and%20slow%20down%20for%20emergency",
   "sourceLabel": "Driver Handbook §7, Move Over and Slow Down"
+ },
+ {
+  "id": "qe892fed0",
+  "topic": "sharing-road",
+  "question": "As of 2026, California's 'Slow Down, Move Over' law also covers:",
+  "options": [
+   "Any stopped vehicle with its hazard lights flashing",
+   "Only police cars",
+   "Only tow trucks"
+  ],
+  "answer": 0,
+  "explanation": "AB 390, effective January 1, 2026, widens the Move Over law: move out of the lane next to any highway maintenance vehicle or stationary vehicle using flashing hazard lights or warning devices such as cones or flares, or slow to a safe speed if you cannot change lanes.",
+  "source": "road-ready-ca",
+  "sourceUrl": "https://www.chp.ca.gov/news-alerts/news-list/new-year-new-laws--chp-highlights-public-safety-laws-taking-effect-in-2026/",
+  "sourceLabel": "CHP: new laws for 2026 (AB 390)"
  },
  {
   "id": "q0e06a293",

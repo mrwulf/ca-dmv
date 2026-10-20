@@ -366,7 +366,7 @@ func TestSourceLinks(t *testing.T) {
 			continue
 		}
 		linked++
-		if !strings.HasPrefix(q.SourceURL, prefix) || q.SourceLabel == "" {
+		if !(strings.HasPrefix(q.SourceURL, prefix) || strings.HasPrefix(q.SourceURL, "https://www.chp.ca.gov/")) || q.SourceLabel == "" {
 			t.Errorf("%s: bad source link %q (label %q)", q.ID, q.SourceURL, q.SourceLabel)
 		}
 	}
