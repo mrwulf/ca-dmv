@@ -95,6 +95,10 @@ The page shows a warning and asks the pupil to type `DELETE` before the button w
 
 Nothing is removed from the database: the test and its answers stay, and the test is only marked deleted (`exams.deleted_at` is set). To restore one, clear that column with SQL. Starting a new test also marks the user's unfinished test deleted this way.
 
+## Updates
+
+Every response carries an `X-App-Build` header and the page embeds the build it was loaded from. When the two differ (a new release is being served), the page reloads itself on its next API call, or when the tab becomes visible again. Reloads are limited to one per 30 seconds so a rollout with old and new pods side by side cannot loop. The first release with this behavior still needs one manual refresh.
+
 ## Version
 
 The home screen footer shows the release tag and short git SHA. The image build stamps them in (`edge` for builds of `main`, the tag for releases), and a plain `go build` in a git checkout reports `dev` and the checkout's SHA. The same values are logged at startup.

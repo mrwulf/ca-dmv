@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"embed"
@@ -8,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io/fs"
 	"log/slog"
 	"net/http"
@@ -213,13 +215,22 @@ func (s *server) routes() http.Handler {
 	mux.Handle("DELETE /api/flags/{id}", s.api(s.deleteFlag))
 
 	web, _ := fs.Sub(webFS, "web")
-	mux.Handle("/", staticHandler(web))
-	return securityHeaders(mux)
+	build := buildID()
+	mux.Handle("/", staticHandler(web, build))
+	return securityHeaders(mux, build)
 }
 
-func securityHeaders(next http.Handler) http.Handler {
+// buildID identifies this release. Pages learn the build they were loaded from, and the X-App-Build
+// header on later responses tells them when a newer release is being served, so they can reload.
+func buildID() string {
+	ver, sha := buildLabel(version, commit)
+	return ver + "-" + sha
+}
+
+func securityHeaders(next http.Handler, build string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
+		h.Set("X-App-Build", build)
 		h.Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("Referrer-Policy", "no-referrer")
@@ -697,19 +708,28 @@ func (s *server) deleteFlag(w http.ResponseWriter, r *http.Request, u user) erro
 
 // staticHandler serves the embedded web files. Browsers revalidate on every request using a
 // content-hash ETag, so a release that changes a file (sign images keep their names) reaches
-// users immediately, and a file that did not change costs only a 304.
-func staticHandler(fsys fs.FS) http.Handler {
+// users immediately, and a file that did not change costs only a 304. The page itself carries the
+// build id, so its ETag changes with every release.
+func staticHandler(fsys fs.FS, build string) http.Handler {
 	etags := map[string]string{}
+	etagOf := func(b []byte) string {
+		sum := sha256.Sum256(b)
+		return `"` + hex.EncodeToString(sum[:8]) + `"`
+	}
 	fs.WalkDir(fsys, ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
 			return nil
 		}
 		if b, err := fs.ReadFile(fsys, p); err == nil {
-			sum := sha256.Sum256(b)
-			etags[p] = `"` + hex.EncodeToString(sum[:8]) + `"`
+			etags[p] = etagOf(b)
 		}
 		return nil
 	})
+	var index []byte
+	if b, err := fs.ReadFile(fsys, "index.html"); err == nil {
+		index = bytes.ReplaceAll(b, []byte(`<meta name="app-build" content="">`), []byte(`<meta name="app-build" content="`+html.EscapeString(build)+`">`))
+		etags["index.html"] = etagOf(index)
+	}
 	files := http.FileServerFS(fsys)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimPrefix(path.Clean("/"+r.URL.Path), "/")
@@ -720,6 +740,11 @@ func staticHandler(fsys fs.FS) http.Handler {
 			w.Header().Set("ETag", tag)
 		}
 		w.Header().Set("Cache-Control", "no-cache")
+		if r.URL.Path == "/" && index != nil {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			http.ServeContent(w, r, "index.html", time.Time{}, bytes.NewReader(index))
+			return
+		}
 		files.ServeHTTP(w, r)
 	})
 }

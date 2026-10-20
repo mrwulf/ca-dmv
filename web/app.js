@@ -58,12 +58,37 @@ function bar(pct, cls) {
   return h("div", { class: `bar ${cls || ""}`, role: "presentation" }, fill);
 }
 
+// A new release changes the X-App-Build header the server sends. When it no longer matches the
+// build this page was loaded from, reload to pick up the new code. The reload is rate limited so
+// mixed old and new replicas during a rollout cannot cause a loop.
+const LOADED_BUILD = document.querySelector('meta[name="app-build"]')?.content || "";
+
+function reloadIfStale(res) {
+  const build = res.headers.get("X-App-Build");
+  if (!LOADED_BUILD || !build || build === LOADED_BUILD) return;
+  try {
+    const last = Number(sessionStorage.getItem("reloadedAt")) || 0;
+    if (Date.now() - last < 30000) return;
+    sessionStorage.setItem("reloadedAt", String(Date.now()));
+  } catch (e) {
+    return; // Without storage there is no way to rate limit, so do not risk a loop.
+  }
+  location.reload();
+}
+
+// Returning to a tab that sat open through a release should not keep running the old code.
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  fetch("/", { method: "HEAD", cache: "no-store" }).then(reloadIfStale).catch(() => {});
+});
+
 async function send(method, path, body) {
   const res = await fetch(path, {
     method,
     headers: body === undefined ? {} : { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+  reloadIfStale(res);
   if (res.status === 401) {
     location.href = "/auth/login";
     return new Promise(() => {});

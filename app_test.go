@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -981,5 +982,35 @@ func TestLeaderboard(t *testing.T) {
 	// A user without finished tests has no page.
 	if code := sam.do("GET", "/api/leaderboard/"+boardRef("user-3-sub"), nil, nil); code != http.StatusNotFound {
 		t.Fatalf("user with no tests = %d, want 404", code)
+	}
+}
+
+// Every response names the running build, and the page embeds the build it was served from, so a
+// page left open across a release can tell that the server moved on and reload.
+func TestBuildIDLetsPagesDetectNewReleases(t *testing.T) {
+	h := (&server{cfg: config{baseURL: "http://localhost"}}).routes()
+	get := func(p string) *httptest.ResponseRecorder {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest("GET", p, nil))
+		return w
+	}
+	build := buildID()
+	for _, p := range []string{"/", "/app.js", "/api/me"} {
+		if got := get(p).Header().Get("X-App-Build"); got != build {
+			t.Fatalf("%s X-App-Build = %q, want %q", p, got, build)
+		}
+	}
+	if page := get("/").Body.String(); !strings.Contains(page, `<meta name="app-build" content="`+build+`">`) {
+		t.Fatalf("index.html does not carry the build id %q", build)
+	}
+
+	web, _ := fs.Sub(webFS, "web")
+	etag := func(build string) string {
+		w := httptest.NewRecorder()
+		staticHandler(web, build).ServeHTTP(w, httptest.NewRequest("GET", "/", nil))
+		return w.Header().Get("ETag")
+	}
+	if etag("v1-aaa") == etag("v2-bbb") {
+		t.Fatal("index.html ETag must change with the build, or browsers keep the stale page on 304")
 	}
 }
