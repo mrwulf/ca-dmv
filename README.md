@@ -77,6 +77,12 @@ The Progress screen shows how much of the whole question bank the pupil has mast
   - ⭐ **Every question mastered in a category**: this test completed a category. Fully mastered categories also get a ⭐ on Progress.
 - **Confetti** and a **🔥 N in a row** counter during a test are cosmetic and use no stored data.
 
+## Leaderboard
+
+There is no link to it, on purpose. Any signed-in user can open `/#/leaderboard` to see everyone who has finished at least one test, sorted by mastery (buttons switch to tests taken, last practiced, or name). Selecting a user shows their progress page: score chart, mastery, topic bars, and a list of their tests with the date, time and percentage.
+
+What other users can see: display name, mastery, test counts, and the date, time, topic and score of each finished test. They cannot open individual tests or see answers, flags or notes. Deleted tests are left out. Users are addressed by a one-way hash of their subject id, so the page and API never expose it.
+
 ## Deleting a test
 
 There is no delete button, on purpose. To delete a test, sign in, open that test's results page (from the Recent exams list on Progress), and add `/delete` to the end of the address:

@@ -146,3 +146,12 @@ p[role="status"]:empty { display: none; }
 .badges { display: grid; gap: 8px; margin: 12px 0; }
 .badge { padding: 12px 14px; font-weight: 600; text-align: center; background: var(--card); border: 2px solid var(--good); border-radius: 14px; }
 .explain { display: block; max-width: 100%; max-height: 340px; width: auto; height: auto; margin: 12px auto 4px; padding: 6px; background: #fff; border-radius: 10px; }
+
+/* Leaderboard */
+.sorts { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; }
+.chip { padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--text); text-decoration: none; font-size: 0.9rem; }
+.chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chip:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.list .plainrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.list .plainrow .when { color: var(--text); font-weight: 400; }
+.list .when .sub { display: block; font-weight: 400; font-size: 0.85rem; }

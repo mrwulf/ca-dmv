@@ -204,6 +204,8 @@ func (s *server) routes() http.Handler {
 	mux.Handle("DELETE /api/exams/{id}", s.api(s.deleteExam))
 	mux.Handle("POST /api/exams/{id}/answer", s.api(s.answer))
 	mux.Handle("GET /api/stats", s.api(s.stats))
+	mux.Handle("GET /api/leaderboard", s.api(s.leaderboard))
+	mux.Handle("GET /api/leaderboard/{ref}", s.api(s.leaderboardUser))
 	mux.Handle("GET /api/questions/{id}", s.api(s.getQuestion))
 	mux.Handle("POST /api/questions/{id}/check", s.api(s.checkQuestion))
 	mux.Handle("GET /api/flags", s.api(s.listFlags))
@@ -475,6 +477,91 @@ func (s *server) stats(w http.ResponseWriter, r *http.Request, u user) error {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"exams": exams, "topics": topics, "pass_percent": passPercent, "mastery": s.mastery(latest),
+	})
+	return nil
+}
+
+// The leaderboard is an unlinked page that any signed-in user can open. Users are identified in its
+// URLs by a hash of their OIDC subject, never the subject itself, and no test ids are ever returned,
+// so another user's individual tests cannot be opened.
+
+func boardRef(sub string) string {
+	sum := sha256.Sum256([]byte("leaderboard:" + sub))
+	return hex.EncodeToString(sum[:8])
+}
+
+type boardUser struct {
+	Ref        string `json:"ref"`
+	Name       string `json:"name"`
+	You        bool   `json:"you"`
+	MasteryPct int    `json:"mastery_pct"`
+	Mastered   int    `json:"mastered"`
+	Total      int    `json:"total"`
+	Tests      int    `json:"tests"`
+	LastAt     int64  `json:"last_at"`
+}
+
+func (s *server) leaderboard(w http.ResponseWriter, r *http.Request, u user) error {
+	rows, err := s.st.leaderboardRows(r.Context())
+	if err != nil {
+		return err
+	}
+	users := []boardUser{}
+	for _, row := range rows {
+		latest, err := s.st.latestAnswers(r.Context(), row.Sub)
+		if err != nil {
+			return err
+		}
+		m := s.mastery(latest)
+		users = append(users, boardUser{
+			Ref: boardRef(row.Sub), Name: row.Name, You: row.Sub == u.Sub,
+			MasteryPct: m.Mastered * 100 / max(m.Total, 1), Mastered: m.Mastered, Total: m.Total,
+			Tests: row.Tests, LastAt: row.LastAt,
+		})
+	}
+	slices.SortStableFunc(users, func(a, b boardUser) int { return b.MasteryPct - a.MasteryPct })
+	writeJSON(w, http.StatusOK, map[string]any{"users": users})
+	return nil
+}
+
+// boardExam is one finished test as other users see it: when and how well, with no id.
+type boardExam struct {
+	FinishedAt int64  `json:"finished_at"`
+	Correct    int    `json:"correct"`
+	Total      int    `json:"total"`
+	Passed     bool   `json:"passed"`
+	Topic      string `json:"topic,omitempty"`
+}
+
+func (s *server) leaderboardUser(w http.ResponseWriter, r *http.Request, u user) error {
+	rows, err := s.st.leaderboardRows(r.Context())
+	if err != nil {
+		return err
+	}
+	var target *boardRow
+	for i := range rows {
+		if boardRef(rows[i].Sub) == r.PathValue("ref") {
+			target = &rows[i]
+		}
+	}
+	if target == nil {
+		return errNotFound
+	}
+	exams, topics, err := s.st.stats(r.Context(), target.Sub)
+	if err != nil {
+		return err
+	}
+	latest, err := s.st.latestAnswers(r.Context(), target.Sub)
+	if err != nil {
+		return err
+	}
+	public := make([]boardExam, 0, len(exams))
+	for _, e := range exams {
+		public = append(public, boardExam{FinishedAt: e.FinishedAt, Correct: e.Correct, Total: e.Total, Passed: e.Passed, Topic: e.Topic})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"name": target.Name, "you": target.Sub == u.Sub, "exams": public, "topics": topics,
+		"pass_percent": passPercent, "mastery": s.mastery(latest),
 	})
 	return nil
 }

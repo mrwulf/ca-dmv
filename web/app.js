@@ -495,32 +495,76 @@ const accuracyClass = (p) => (p >= 80 ? "good" : p >= 65 ? "warn" : "bad");
 
 async function progress() {
   const { exams, topics, mastery, pass_percent: passPercent } = await api("/api/stats");
-  const recent = exams.slice(-30);
-
-  const mastered = new Set(mastery.topics.filter((t) => t.mastered === t.total).map((t) => t.topic));
   const nodes = [h("div", { class: "topbar" }, h("h1", {}, "Progress"), homeLink())];
   if (!exams.length) {
     nodes.push(h("div", { class: "card" }, h("p", {}, "Finish an exam to see your progress here.")));
     show(...nodes);
     return;
   }
-  nodes.push(
+  nodes.push(...progressBody({ exams, topics, mastery, passPercent }, (e) => `#/results/${e.id}`));
+  show(...nodes);
+}
+
+// The chart, mastery and topic sections shared by your own progress page and the leaderboard view.
+// linkFor returns the link for an exam row, or nothing to show the row as plain text.
+function progressBody({ exams, topics, mastery, passPercent }, linkFor, who) {
+  const recent = exams.slice(-30);
+  const mastered = new Set(mastery.topics.filter((t) => t.mastered === t.total).map((t) => t.topic));
+  const row = (e) => {
+    const kids = [
+      h("span", { class: "when" }, e.topic ? `${fmtDateTime(e.finished_at)} · ${topicName(e.topic)}` : fmtDateTime(e.finished_at)),
+      h("span", { class: "result" }, `${e.correct}/${e.total} · ${pct(e.correct, e.total)}%`)];
+    const href = linkFor(e);
+    return href ? h("a", { href }, ...kids) : h("div", { class: "plainrow" }, ...kids);
+  };
+  return [
     h("div", { class: "card" }, h("strong", {}, "Score per exam"), chart(recent, passPercent),
       h("p", { class: "muted" }, `Dashed line is the ${passPercent}% pass mark. Last 30 exams.`)),
     h("h2", {}, "Mastery across all questions"),
-    masteryBar(mastery),
+    masteryBar(mastery, who),
     h("h2", {}, "Topics, weakest first"),
     [...topics].sort((a, b) => a.correct / a.total - b.correct / b.total).map((t) =>
       h("div", { class: "topic" },
         h("div", { class: "row" }, h("span", {}, mastered.has(t.topic) ? `${topicName(t.topic)} ⭐` : topicName(t.topic)), h("span", { class: "muted" }, `${pct(t.correct, t.total)}% of ${t.total}`)),
         bar(pct(t.correct, t.total), accuracyClass(pct(t.correct, t.total))))),
     h("h2", {}, "Recent exams"),
-    h("div", { class: "list" }, [...exams].reverse().slice(0, 20).map((e) =>
-      h("a", { href: `#/results/${e.id}` },
-        h("span", { class: "when" }, e.topic ? `${fmtDateTime(e.finished_at)} · ${topicName(e.topic)}` : fmtDateTime(e.finished_at)),
-        h("span", { class: "result" }, `${e.correct}/${e.total} · ${pct(e.correct, e.total)}%`)))),
+    h("div", { class: "list" }, [...exams].reverse().slice(0, 20).map(row)),
+  ];
+}
+
+// ---------- Leaderboard (not linked from anywhere; open #/leaderboard) ----------
+
+const BOARD_SORTS = {
+  mastery: ["Mastery", (a, b) => b.mastery_pct - a.mastery_pct || b.mastered - a.mastered],
+  tests: ["Tests", (a, b) => b.tests - a.tests],
+  recent: ["Last practiced", (a, b) => b.last_at - a.last_at],
+  name: ["Name", (a, b) => a.name.localeCompare(b.name)],
+};
+
+async function leaderboard(sort) {
+  const { users } = await api("/api/leaderboard");
+  const key = BOARD_SORTS[sort] ? sort : "mastery";
+  const rows = [...users].sort((a, b) => BOARD_SORTS[key][1](a, b) || a.name.localeCompare(b.name));
+  show(
+    h("div", { class: "topbar" }, h("h1", {}, "Leaderboard"), homeLink()),
+    h("div", { class: "sorts" }, Object.entries(BOARD_SORTS).map(([k, [label]]) =>
+      h("a", { class: k === key ? "chip on" : "chip", href: `#/leaderboard/sort/${k}`, "aria-current": k === key ? "true" : null }, label))),
+    rows.length ? h("div", { class: "list" }, rows.map((u, i) =>
+      h("a", { href: `#/leaderboard/${u.ref}` },
+        h("span", { class: "when" }, `${i + 1}. ${u.name}${u.you ? " (you)" : ""}`,
+          h("span", { class: "muted sub" }, `${u.tests} ${u.tests === 1 ? "test" : "tests"} · last ${fmtDate(u.last_at)}`)),
+        h("span", { class: "result" }, `${u.mastery_pct}%`)))) :
+      h("div", { class: "card" }, h("p", {}, "Nobody has finished a test yet.")),
   );
-  show(...nodes);
+}
+
+async function leaderboardUser(ref) {
+  const d = await api(`/api/leaderboard/${encodeURIComponent(ref)}`);
+  const title = d.you ? `${d.name} (you)` : d.name;
+  show(
+    h("div", { class: "topbar" }, h("h1", {}, title), navLink("← Leaderboard", "#/leaderboard")),
+    ...progressBody({ exams: d.exams, topics: d.topics, mastery: d.mastery, passPercent: d.pass_percent }, () => null, d.you ? "you" : "they"),
+  );
 }
 
 // The question's category, with a way to practice that whole category instead of just this question.
@@ -536,13 +580,13 @@ function categoryBlock(topic) {
 }
 
 // A question counts as mastered when it was answered correctly the last time it was seen.
-function masteryBar(m) {
+function masteryBar(m, who = "you") {
   const p = pct(m.mastered, m.total);
   return h("div", { class: "card" },
     h("div", { class: "topic" },
       h("div", { class: "row" }, h("strong", {}, `${p}% mastered`), h("span", { class: "muted" }, `${m.mastered} of ${m.total} questions`)),
       bar(p, accuracyClass(p))),
-    h("p", { class: "muted" }, `${m.missed} missed the last time you saw them, ${m.unseen} not seen yet.`),
+    h("p", { class: "muted" }, `${m.missed} missed the last time ${who === "you" ? "you saw" : "they saw"} them, ${m.unseen} not seen yet.`),
     h("p", { class: "muted" }, `⭐ ${m.topics.filter((t) => t.mastered === t.total).length} of ${m.topics.length} topics fully mastered.`));
 }
 
@@ -700,6 +744,7 @@ function route() {
     q: () => id && practice(id),
     "signed-out": () => signedOut(),
     progress: () => progress(),
+    leaderboard: () => (id === "sort" ? leaderboard(action) : id ? leaderboardUser(id) : leaderboard()),
     flagged: () => flagged(),
   };
   const run = (screens[page] && screens[page]()) || home();

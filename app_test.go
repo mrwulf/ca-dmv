@@ -889,3 +889,97 @@ func TestStaticFilesRevalidate(t *testing.T) {
 		}
 	}
 }
+
+// asUser returns a client for another signed-in user of the same app and database.
+func (c *apiClient) asUser(t *testing.T, sub, name string) *apiClient {
+	t.Helper()
+	tok, err := c.st.createSession(context.Background(), sub, name, "", sessionTTL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cp := *c
+	cp.cookie = &http.Cookie{Name: sessionCookie, Value: tok}
+	return &cp
+}
+
+func TestLeaderboard(t *testing.T) {
+	c := newAPIClient(t) // user-1, "Pat"
+	bank, _ := loadBank(questionsJSON)
+	sam := c.asUser(t, "user-2-sub", "Sam")
+	c.asUser(t, "user-3-sub", "Lurker") // signed in, never finished a test
+
+	// Pat answers 6 questions right; Sam answers the same questions wrong, then one test he deletes.
+	qs := bank[:6]
+	finishExam(t, c.st, "user-1", qs, rightAnswer)
+	finishExam(t, c.st, "user-2-sub", qs, wrongAnswer)
+	deleted := finishExam(t, c.st, "user-2-sub", qs, rightAnswer)
+	if err := c.st.deleteExam(context.Background(), "user-2-sub", deleted); err != nil {
+		t.Fatal(err)
+	}
+
+	anon := httptest.NewRecorder()
+	c.h.ServeHTTP(anon, httptest.NewRequest("GET", "/api/leaderboard", nil))
+	if anon.Code != http.StatusUnauthorized {
+		t.Fatalf("anonymous leaderboard = %d", anon.Code)
+	}
+
+	var board struct {
+		Users []boardUser `json:"users"`
+	}
+	raw := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/api/leaderboard", nil)
+	r.AddCookie(sam.cookie)
+	c.h.ServeHTTP(raw, r)
+	if raw.Code != 200 {
+		t.Fatalf("leaderboard = %d", raw.Code)
+	}
+	json.Unmarshal(raw.Body.Bytes(), &board)
+	if len(board.Users) != 2 {
+		t.Fatalf("want Pat and Sam only (Lurker has no finished test): %+v", board.Users)
+	}
+	pat, samRow := board.Users[0], board.Users[1]
+	if pat.Name != "Pat" || samRow.Name != "Sam" || pat.MasteryPct < samRow.MasteryPct {
+		t.Fatalf("not sorted by mastery, highest first: %+v", board.Users)
+	}
+	if pat.Mastered != 6 || samRow.Mastered != 0 || pat.Tests != 1 || samRow.Tests != 1 {
+		t.Fatalf("counts: %+v (deleted test must not count)", board.Users)
+	}
+	if pat.You || !samRow.You {
+		t.Fatalf("you flag should be set only on the viewer: %+v", board.Users)
+	}
+	for _, secret := range []string{"user-1", "user-2-sub", "user-3-sub"} {
+		if strings.Contains(raw.Body.String(), secret) {
+			t.Fatalf("leaderboard leaks the subject %q", secret)
+		}
+	}
+
+	// Drill in. No test ids come back, and the subject itself is not a valid reference.
+	var detail struct {
+		Name    string      `json:"name"`
+		Exams   []boardExam `json:"exams"`
+		Mastery masteryView `json:"mastery"`
+	}
+	d := httptest.NewRecorder()
+	r = httptest.NewRequest("GET", "/api/leaderboard/"+pat.Ref, nil)
+	r.AddCookie(sam.cookie)
+	c.h.ServeHTTP(d, r)
+	if d.Code != 200 {
+		t.Fatalf("detail = %d", d.Code)
+	}
+	json.Unmarshal(d.Body.Bytes(), &detail)
+	if detail.Name != "Pat" || len(detail.Exams) != 1 || detail.Exams[0].Correct != 6 || detail.Mastery.Mastered != 6 {
+		t.Fatalf("detail = %+v", detail)
+	}
+	if strings.Contains(d.Body.String(), `"id"`) || strings.Contains(d.Body.String(), "user-1") {
+		t.Fatalf("detail exposes an id or the subject: %s", d.Body.String())
+	}
+	for _, bad := range []string{"user-1", "nope", boardRef("not-a-user")} {
+		if code := sam.do("GET", "/api/leaderboard/"+bad, nil, nil); code != http.StatusNotFound {
+			t.Fatalf("reference %q = %d, want 404", bad, code)
+		}
+	}
+	// A user without finished tests has no page.
+	if code := sam.do("GET", "/api/leaderboard/"+boardRef("user-3-sub"), nil, nil); code != http.StatusNotFound {
+		t.Fatalf("user with no tests = %d, want 404", code)
+	}
+}

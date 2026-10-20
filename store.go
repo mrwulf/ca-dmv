@@ -521,6 +521,32 @@ func (s *store) masteryAsOf(ctx context.Context, sub, examID string, includeSelf
 	return latest, rows.Err()
 }
 
+type boardRow struct {
+	Sub, Name string
+	Tests     int
+	LastAt    int64
+}
+
+// leaderboardRows lists every user who has at least one finished, non-deleted test.
+func (s *store) leaderboardRows(ctx context.Context) ([]boardRow, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT u.sub, u.name, COUNT(e.id), MAX(e.finished_at)
+		FROM users u JOIN exams e ON e.sub = u.sub AND e.finished_at IS NOT NULL AND e.deleted_at IS NULL
+		GROUP BY u.sub ORDER BY u.name`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []boardRow
+	for rows.Next() {
+		var r boardRow
+		if err = rows.Scan(&r.Sub, &r.Name, &r.Tests, &r.LastAt); err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
+}
+
 // latestAnswers maps each question id to whether the user's most recent answer to it was correct,
 // over their finished exams that are not deleted.
 func (s *store) latestAnswers(ctx context.Context, sub string) (map[string]bool, error) {
