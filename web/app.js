@@ -494,22 +494,21 @@ const accuracyClass = (p) => (p >= 80 ? "good" : p >= 65 ? "warn" : "bad");
 // ---------- Progress ----------
 
 async function progress() {
-  const { exams, topics, mastery, pass_percent: passPercent } = await api("/api/stats");
+  const { exams, mastery, pass_percent: passPercent } = await api("/api/stats");
   const nodes = [h("div", { class: "topbar" }, h("h1", {}, "Progress"), homeLink())];
   if (!exams.length) {
     nodes.push(h("div", { class: "card" }, h("p", {}, "Finish an exam to see your progress here.")));
     show(...nodes);
     return;
   }
-  nodes.push(...progressBody({ exams, topics, mastery, passPercent }, (e) => `#/results/${e.id}`));
+  nodes.push(...progressBody({ exams, mastery, passPercent }, (e) => `#/results/${e.id}`));
   show(...nodes);
 }
 
 // The chart, mastery and topic sections shared by your own progress page and the leaderboard view.
 // linkFor returns the link for an exam row, or nothing to show the row as plain text.
-function progressBody({ exams, topics, mastery, passPercent }, linkFor, who) {
+function progressBody({ exams, mastery, passPercent }, linkFor, who) {
   const recent = exams.slice(-30);
-  const mastered = new Set(mastery.topics.filter((t) => t.mastered === t.total).map((t) => t.topic));
   const row = (e) => {
     const kids = [
       h("span", { class: "when" }, e.topic ? `${fmtDateTime(e.finished_at)} · ${topicName(e.topic)}` : fmtDateTime(e.finished_at)),
@@ -523,10 +522,12 @@ function progressBody({ exams, topics, mastery, passPercent }, linkFor, who) {
     h("h2", {}, "Mastery across all questions"),
     masteryBar(mastery, who),
     h("h2", {}, "Topics, weakest first"),
-    [...topics].sort((a, b) => a.correct / a.total - b.correct / b.total).map((t) =>
-      h("div", { class: "topic" },
-        h("div", { class: "row" }, h("span", {}, mastered.has(t.topic) ? `${topicName(t.topic)} ⭐` : topicName(t.topic)), h("span", { class: "muted" }, `${pct(t.correct, t.total)}% of ${t.total}`)),
-        bar(pct(t.correct, t.total), accuracyClass(pct(t.correct, t.total))))),
+    [...mastery.topics].sort((a, b) => a.mastered / a.total - b.mastered / b.total).map((t) => {
+      const p = pct(t.mastered, t.total);
+      return h("div", { class: "topic" },
+        h("div", { class: "row" }, h("span", {}, t.mastered === t.total ? `${topicName(t.topic)} ⭐` : topicName(t.topic)), h("span", { class: "muted" }, `${t.mastered} of ${t.total} mastered`)),
+        bar(p, accuracyClass(p)));
+    }),
     h("h2", {}, "Recent exams"),
     h("div", { class: "list" }, [...exams].reverse().slice(0, 20).map(row)),
   ];
@@ -563,7 +564,7 @@ async function leaderboardUser(ref) {
   const title = d.you ? `${d.name} (you)` : d.name;
   show(
     h("div", { class: "topbar" }, h("h1", {}, title), navLink("← Leaderboard", "#/leaderboard")),
-    ...progressBody({ exams: d.exams, topics: d.topics, mastery: d.mastery, passPercent: d.pass_percent }, () => null, d.you ? "you" : "they"),
+    ...progressBody({ exams: d.exams, mastery: d.mastery, passPercent: d.pass_percent }, () => null, d.you ? "you" : "they"),
   );
 }
 
