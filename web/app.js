@@ -23,6 +23,24 @@ const app = document.getElementById("app");
 const SIGNS_REV = "2";
 const signSrc = (image) => `/${image}?v=${SIGNS_REV}`;
 
+// The picture shown with a question. Small raster pictures, such as the handbook's 60 px signal faces,
+// are shown at about twice their size instead of being stretched to the full width.
+function signImg(image, alt) {
+  return h("img", {
+    class: "sign", src: signSrc(image), alt: alt || "Road sign or marking",
+    onload: (e) => {
+      const img = e.target;
+      if (/\.(gif|png|jpe?g)\?/.test(img.src) && img.naturalWidth < 110) img.style.width = `${Math.min(img.naturalWidth * 2.2, 220)}px`;
+    },
+  });
+}
+
+// A handbook illustration shown with the explanation, after the question is answered.
+function explainFigure(src, alt) {
+  if (!src) return null;
+  return h("img", { class: "explain", src: signSrc(src), alt: alt || "Handbook illustration", loading: "lazy" });
+}
+
 function h(tag, props, ...kids) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(props || {})) {
@@ -322,7 +340,7 @@ async function home() {
       h("a", { class: "btn secondary", href: "#/progress" }, "See progress over time"),
       h("a", { class: "btn secondary", href: "#/flagged" }, `Flagged questions (${me.flag_count})`)),
     h("p", { class: "footer muted center" }, [me.version, me.commit].filter(Boolean).join(" · ")),
-    h("p", { class: "footer muted center" }, "Hand-signal pictures: California Driver's Handbook, California Department of Motor Vehicles, licensed under ",
+    h("p", { class: "footer muted center" }, "Handbook illustrations: California Driver's Handbook, California Department of Motor Vehicles, licensed under ",
       h("a", { href: "https://creativecommons.org/licenses/by-nc/4.0/", target: "_blank", rel: "noopener noreferrer" }, "CC BY-NC 4.0"), "."),
   );
 }
@@ -403,12 +421,13 @@ function drawQuestion(view, pos, answered, onNext) {
       h("span", { class: "muted" }, streak >= 3 ? `${view.correct} correct so far · 🔥 ${streak} in a row` : `${view.correct} correct so far`)),
     bar((100 * done) / view.total),
     h("div", { class: "meta" }, h("span", {}, `Question ${pos + 1} of ${view.total}`), h("span", {}, topicName(q.topic))),
-    q.image && h("img", { class: "sign", src: signSrc(q.image), alt: q.image_alt || "Road sign or marking" }),
+    q.image && signImg(q.image, q.image_alt),
     h("p", { class: "q" }, q.text),
     buttons,
     answered && h("div", { class: `feedback ${right ? "right" : "wrong"}`, role: "status" },
       h("strong", {}, right ? "Correct" : "Not quite"),
       h("span", {}, answered.explanation),
+      explainFigure(answered.explain_image, answered.explain_image_alt),
       sourceLink(answered.source_label, answered.source_url)),
     answered && flagBox(q.id, q, true),
     answered && h("div", { class: "sticky" },
@@ -463,6 +482,7 @@ async function results(id) {
         h("p", {}, h("strong", {}, "You answered: "), q.options[q.chosen]),
         h("p", {}, h("strong", {}, "Correct: "), q.options[q.correct_index]),
         h("p", { class: "muted" }, q.explanation),
+        explainFigure(q.explain_image, q.explain_image_alt),
         sourceLink(q.source_label, q.source_url),
         categoryBlock(q.topic),
         flagBox(q.id, q, true))),
@@ -630,12 +650,13 @@ async function practice(id) {
     show(
       h("div", { class: "topbar" }, navButton("← Back", () => history.back()), homeLink()),
       h("div", { class: "meta" }, h("span", {}, "Practice one question"), h("span", {}, topicName(q.topic))),
-      q.image && h("img", { class: "sign", src: signSrc(q.image), alt: q.image_alt || "Road sign or marking" }),
+      q.image && signImg(q.image, q.image_alt),
       h("p", { class: "q" }, q.text),
       buttons,
       res && h("div", { class: `feedback ${res.correct ? "right" : "wrong"}`, role: "status" },
         h("strong", {}, res.correct ? "Correct" : "Not quite"),
         h("span", {}, res.explanation),
+        explainFigure(res.explain_image, res.explain_image_alt),
         sourceLink(res.source_label, res.source_url)),
       res && categoryBlock(q.topic),
       flagBox(q.id, q, !!res),

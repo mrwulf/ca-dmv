@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -735,41 +736,136 @@ func TestMasteryAsOfOrdering(t *testing.T) {
 	}
 }
 
-// Every sign image a question points at must ship with the app and must be plain, safe SVG.
+// Every picture a question points at must ship with the app. SVGs must be plain and safe; raster
+// pictures must be real images.
 func TestSignImages(t *testing.T) {
 	bank, _ := loadBank(questionsJSON)
 	seen := map[string]bool{}
-	for _, q := range bank {
-		if q.Image == "" || seen[q.Image] {
-			continue
+	check := func(id, image, alt string) {
+		if image == "" || seen[image] {
+			return
 		}
-		seen[q.Image] = true
-		raw, err := webFS.ReadFile("web/" + q.Image)
+		seen[image] = true
+		raw, err := webFS.ReadFile("web/" + image)
 		if err != nil {
-			t.Errorf("%s: %v", q.Image, err)
-			continue
+			t.Errorf("%s: %v", image, err)
+			return
 		}
-		if strings.HasSuffix(q.Image, ".png") {
+		if alt == "" {
+			t.Errorf("%s: question %s has no alt text for it", image, id)
+		}
+		switch {
+		case strings.HasSuffix(image, ".png"):
 			if !strings.HasPrefix(string(raw), "\x89PNG") {
-				t.Errorf("%s: not a PNG", q.Image)
+				t.Errorf("%s: not a PNG", image)
 			}
-			continue
-		}
-		svg := strings.ToLower(string(raw))
-		if !strings.Contains(svg, "<svg") || !strings.Contains(svg, "viewbox") {
-			t.Errorf("%s: not an SVG with a viewBox", q.Image)
-		}
-		for _, bad := range []string{"<script", "foreignobject", "onload=", "href=\"http", "href='http"} {
-			if strings.Contains(svg, bad) {
-				t.Errorf("%s: contains %q", q.Image, bad)
+		case strings.HasSuffix(image, ".gif"):
+			if !strings.HasPrefix(string(raw), "GIF8") {
+				t.Errorf("%s: not a GIF", image)
+			}
+		case strings.HasSuffix(image, ".jpg"):
+			if !strings.HasPrefix(string(raw), "\xff\xd8") {
+				t.Errorf("%s: not a JPEG", image)
+			}
+		default:
+			svg := strings.ToLower(string(raw))
+			if !strings.Contains(svg, "<svg") || !strings.Contains(svg, "viewbox") {
+				t.Errorf("%s: not an SVG with a viewBox", image)
+			}
+			for _, bad := range []string{"<script", "foreignobject", "onload=", "href=\"http", "href='http"} {
+				if strings.Contains(svg, bad) {
+					t.Errorf("%s: contains %q", image, bad)
+				}
 			}
 		}
-		if q.ImageAlt == "" {
-			t.Errorf("%s: question %s has no image alt text", q.Image, q.ID)
-		}
+	}
+	for _, q := range bank {
+		check(q.ID, q.Image, q.ImageAlt)
+		check(q.ID, q.ExplainImage, q.ExplainImageAlt)
 	}
 	if len(seen) == 0 {
 		t.Fatal("no sign images found")
+	}
+	// Files nothing points at should not ship.
+	for _, dir := range []string{"web/signs", "web/handbook"} {
+		entries, _ := webFS.ReadDir(dir)
+		for _, e := range entries {
+			if p := strings.TrimPrefix(dir+"/"+e.Name(), "web/"); !seen[p] {
+				t.Errorf("%s is not used by any question", p)
+			}
+		}
+	}
+}
+
+// Handbook illustrations are CC BY-NC 4.0, which requires the DMV's credit line. It must be in
+// NOTICE.md and shown in the app whenever any handbook picture is used.
+func TestHandbookCredit(t *testing.T) {
+	const credit = "California Driver's Handbook, California Department of Motor Vehicles, licensed under CC BY-NC 4.0."
+	bank, _ := loadBank(questionsJSON)
+	used := false
+	for _, q := range bank {
+		used = used || strings.HasPrefix(q.Image, "handbook/") || strings.HasPrefix(q.ExplainImage, "handbook/") || strings.Contains(q.Image, "hand-signal-")
+	}
+	if !used {
+		t.Skip("no handbook pictures in use")
+	}
+	notice, err := os.ReadFile("NOTICE.md")
+	if err != nil || !strings.Contains(string(notice), credit) {
+		t.Fatalf("NOTICE.md must contain the credit line %q (err %v)", credit, err)
+	}
+	app, _ := webFS.ReadFile("web/app.js")
+	if !strings.Contains(string(app), "California Department of Motor Vehicles, licensed under") || !strings.Contains(string(app), "CC BY-NC 4.0") {
+		t.Fatal("the app must show the DMV credit line")
+	}
+}
+
+// The picture that goes with an explanation must not reach the browser until the question is answered.
+func TestExplainImageHiddenUntilAnswered(t *testing.T) {
+	c := newAPIClient(t)
+	bank, _ := loadBank(questionsJSON)
+	var qs []question
+	for _, q := range bank {
+		if q.ExplainImage != "" && len(qs) < 3 {
+			qs = append(qs, q)
+		}
+	}
+	if len(qs) < 3 {
+		t.Fatalf("expected questions with explanation pictures, found %d", len(qs))
+	}
+	id, err := c.st.createExam(context.Background(), "user-1", qs, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	type qv struct {
+		ExplainImage string `json:"explain_image"`
+	}
+	var before struct{ Questions []qv }
+	c.do("GET", "/api/exams/"+id, nil, &before)
+	for _, q := range before.Questions {
+		if q.ExplainImage != "" {
+			t.Fatal("explanation picture sent before the question was answered")
+		}
+	}
+	var after struct{ Questions []qv }
+	c.do("POST", "/api/exams/"+id+"/answer", map[string]int{"pos": 0, "choice": 0}, &after)
+	if after.Questions[0].ExplainImage == "" || after.Questions[1].ExplainImage != "" {
+		t.Fatalf("after answering question 0: %+v", after.Questions)
+	}
+
+	// Single-question practice: hidden in the question, returned by the check.
+	var one struct {
+		ExplainImage string `json:"explain_image"`
+	}
+	c.do("GET", "/api/questions/"+qs[0].ID, nil, &one)
+	if one.ExplainImage != "" {
+		t.Fatal("practice question leaks the explanation picture")
+	}
+	var res struct {
+		ExplainImage string `json:"explain_image"`
+	}
+	c.do("POST", "/api/questions/"+qs[0].ID+"/check", map[string]string{"answer": qs[0].Options[0]}, &res)
+	if res.ExplainImage != qs[0].ExplainImage {
+		t.Fatalf("check returned %q, want %q", res.ExplainImage, qs[0].ExplainImage)
 	}
 }
 

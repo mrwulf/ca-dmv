@@ -8,7 +8,7 @@ const [scratch, out] = process.argv.slice(2);
 
 type Q = {
   id: string; topic: string; question: string; options: string[]; answer: number;
-  explanation: string; source: string; sourceUrl?: string; sourceLabel?: string; image?: string; imageAlt?: string;
+  explanation: string; source: string; sourceUrl?: string; sourceLabel?: string; image?: string; imageAlt?: string; explainImage?: string; explainImageAlt?: string;
 };
 
 const TOPIC_MAP: Record<string, string> = {
@@ -169,13 +169,6 @@ for (const q of all) if (q.image && IMAGE_ALT[q.image]) q.imageAlt = IMAGE_ALT[q
 // The handbook's own hand-signal illustrations (PNG) replace the SVG drawings in the MIT bank.
 for (const q of all) if (q.image && /^signs\/hand-signal-.*\.svg$/.test(q.image)) q.image = q.image.replace(/\.svg$/, ".png");
 
-// "To signal a left turn ... you should:" names the signal and offers arm positions, so a picture of
-// the arm would give the answer away. Those questions are text only.
-for (const q of all) if (q.image && /^signs\/hand-signal-/.test(q.image) && /^To signal/.test(q.question)) {
-  delete q.image;
-  delete q.imageAlt;
-}
-
 // De-duplicate: drop a question if its normalized text matches an earlier one, or its first
 // 60 normalized characters plus the correct answer match. Prefer entries with images, then ones with a source link.
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();
@@ -228,6 +221,12 @@ for (const x of EXTERNAL_SOURCES) {
   q.sourceUrl = x.url;
   q.sourceLabel = x.label;
 }
+// Handbook pictures (CC BY-NC 4.0): questions/handbook-images.json maps question id to a picture shown
+// with the question (image) and/or with its explanation after answering (explainImage).
+const pictures: Record<string, { image?: string; imageAlt?: string; explainImage?: string; explainImageAlt?: string }> =
+  JSON.parse(readFileSync(out.replace(/[^/]*$/, "handbook-images.json"), "utf8"));
+for (const q of kept) Object.assign(q, pictures[q.id] ?? {});
+
 const stale = Object.keys(sources).filter((id) => !kept.some((q) => q.id === id));
 if (stale.length) console.warn(`sources.json has ${stale.length} ids not in the bank:`, stale.slice(0, 5));
 console.log(`linked ${linked} of ${kept.length} questions to the handbook`);

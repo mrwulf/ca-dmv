@@ -20,6 +20,9 @@ type question struct {
 	SourceLabel string   `json:"sourceLabel,omitempty"`
 	Image       string   `json:"image,omitempty"`
 	ImageAlt    string   `json:"imageAlt,omitempty"`
+	// ExplainImage is a picture shown with the explanation, only after the question is answered.
+	ExplainImage    string `json:"explainImage,omitempty"`
+	ExplainImageAlt string `json:"explainImageAlt,omitempty"`
 }
 
 const (

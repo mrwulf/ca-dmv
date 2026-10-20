@@ -1,0 +1,394 @@
+{
+ "q016e26a0": {
+  "image": "signs/signal-red.svg",
+  "imageAlt": "Traffic signal showing a solid red light"
+ },
+ "q048126f2": {
+  "explainImage": "handbook/blind-spots.png",
+  "explainImageAlt": "Handbook illustration: Diagram of a car's blind spots beside and behind it"
+ },
+ "q06385a8f": {
+  "explainImage": "handbook/center_left_turn_lane.png",
+  "explainImageAlt": "Handbook illustration: Image of cars navigating thru a Center Left Turn Lane"
+ },
+ "q0b4f284f": {
+  "explainImage": "handbook/roundabout-right.png",
+  "explainImageAlt": "Handbook illustration: Overhead view of yellow car making a right turn at a roundabout"
+ },
+ "q0b9be91f": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "q0e6f5741": {
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
+ },
+ "q1127af69": {
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
+ },
+ "q11ccf7b7": {
+  "image": "signs/signal-flashing-yellow.svg",
+  "imageAlt": "Traffic signal showing a flashing yellow light"
+ },
+ "q11df79b9": {
+  "explainImage": "handbook/disabled_vehicle_railroad.png",
+  "explainImageAlt": "Handbook illustration: A car is stalled on railroad tracks with an oncoming train. The image includes overlaid text reading “Crash area” marking the hazardous zone in front of the train in the direction it is traveling"
+ },
+ "q12fa147a": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "q13743dd7": {
+  "explainImage": "handbook/left_turn.png",
+  "explainImageAlt": "Handbook illustration: Left Turn"
+ },
+ "q199f4eb8": {
+  "explainImage": "handbook/truck_driver_blind_spots-1.png",
+  "explainImageAlt": "Handbook illustration: a truck with the no-zone blind spots shaded in front, behind, and along both sides"
+ },
+ "q1b103038": {
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
+ },
+ "q1ef314fb": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "q1f83d795": {
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
+ },
+ "q20cf9d9f": {
+  "explainImage": "handbook/parallel_parking.png",
+  "explainImageAlt": "Handbook illustration: Parallel Parking"
+ },
+ "q26aad086": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "q2b1ddbfc": {
+  "image": "signs/signal-yellow.svg",
+  "imageAlt": "Traffic signal showing a solid yellow light"
+ },
+ "q2cf2b582": {
+  "image": "signs/no-u-turn.svg",
+  "imageAlt": "No U-turn sign: a red circle with a slash through a U-turn arrow"
+ },
+ "q2d1c6e80": {
+  "image": "signs/signal-yellow.svg",
+  "imageAlt": "Traffic signal showing a solid yellow light"
+ },
+ "q35518ac2": {
+  "explainImage": "handbook/hov_2.jpg",
+  "explainImageAlt": "Handbook illustration: HOV lane sign reading Left Lane, HOV 2+, 2 or more only, when metered"
+ },
+ "q372a43e9": {
+  "explainImage": "handbook/find_a_space-edited.png",
+  "explainImageAlt": "Handbook illustration: Find a parallel parking space"
+ },
+ "q3760cc65": {
+  "explainImage": "handbook/left_turn-1.png",
+  "explainImageAlt": "Handbook illustration: Car seen from behind with the driver's left arm held straight out of the window"
+ },
+ "q392c4b9e": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "q42452dd4": {
+  "explainImage": "handbook/truck_driver_blind_spots-1.png",
+  "explainImageAlt": "Handbook illustration: a truck with the no-zone blind spots shaded in front, behind, and along both sides"
+ },
+ "q4430e30d": {
+  "explainImage": "handbook/truck_driver_blind_spots-1.png",
+  "explainImageAlt": "Handbook illustration: a truck with the no-zone blind spots shaded in front, behind, and along both sides"
+ },
+ "q452ad8da": {
+  "image": "signs/signal-flashing-red.svg",
+  "imageAlt": "Traffic signal showing a flashing red light"
+ },
+ "q4a4e6de6": {
+  "explainImage": "handbook/rightturn.png",
+  "explainImageAlt": "Handbook illustration: Image of a vehicle making a right turn"
+ },
+ "q4ae46dca": {
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
+ },
+ "q50afe91f": {
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
+ },
+ "q543d172a": {
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
+ },
+ "q55942d71": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "q562efa9d": {
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
+ },
+ "q579c6c9e": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "q597f21a8": {
+  "explainImage": "handbook/firetruck-pullover-1.png",
+  "explainImageAlt": "Handbook illustration: Car pulling over to let fire truck pass"
+ },
+ "q59de83ed": {
+  "image": "signs/signal-green-arrow.svg",
+  "imageAlt": "Traffic signal showing a green arrow"
+ },
+ "q637aae12": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "q64f32898": {
+  "explainImage": "handbook/bus-safety-zone-1.png",
+  "explainImageAlt": "Handbook illustration: Trolley next to demarked safe zone"
+ },
+ "q6c54f27a": {
+  "explainImage": "handbook/bike-right.png",
+  "explainImageAlt": "Handbook illustration: Car passing a cyclist. The car leaves enough space between itself and the bicyclist as it passes"
+ },
+ "q6eae7f23": {
+  "image": "signs/signal-flashing-yellow.svg",
+  "imageAlt": "Traffic signal showing a flashing yellow light"
+ },
+ "q70b5a4a1": {
+  "explainImage": "handbook/bike-turn-1.png",
+  "explainImageAlt": "Handbook illustration: Intersection showing options for bicyclist to turn left or go straight. The bicyclist uses the left lane to turn left. To go straight, the cyclist used the inside line of the right lane to enter the intersection, then shifts to the bike lane as they exit the intersection"
+ },
+ "q70dd17f5": {
+  "explainImage": "handbook/center_left_turn_lane.png",
+  "explainImageAlt": "Handbook illustration: Image of cars navigating thru a Center Left Turn Lane"
+ },
+ "q71c440bc": {
+  "image": "signs/signal-green-arrow.svg",
+  "imageAlt": "Traffic signal showing a green arrow"
+ },
+ "q71d1b2df": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "q7238fbc8": {
+  "image": "signs/signal-flashing-yellow-arrow.svg",
+  "imageAlt": "Traffic signal showing a flashing yellow arrow"
+ },
+ "q72ccfe2e": {
+  "explainImage": "handbook/parallel_parking.png",
+  "explainImageAlt": "Handbook illustration: Parallel Parking"
+ },
+ "q76d2476e": {
+  "image": "signs/signal-red-arrow.svg",
+  "imageAlt": "Traffic signal showing a red arrow"
+ },
+ "q795c2263": {
+  "explainImage": "handbook/bicycle_lane.png",
+  "explainImageAlt": "Handbook illustration: Bicycle Lane"
+ },
+ "q7bc25e3f": {
+  "explainImage": "handbook/double_solid_yellow_lines.png",
+  "explainImageAlt": "Handbook illustration: Double Solid Yellow Lines. End Divided Road Sign and U-Turn OK Sign"
+ },
+ "q7d14d6fa": {
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
+ },
+ "q7d3d1796": {
+  "explainImage": "handbook/bike-right.png",
+  "explainImageAlt": "Handbook illustration: Car passing a cyclist. The car leaves enough space between itself and the bicyclist as it passes"
+ },
+ "q7f19ca69": {
+  "explainImage": "handbook/right_turn_oneway_street.png",
+  "explainImageAlt": "Handbook illustration: Right turn from a one-way street onto a one-way street"
+ },
+ "q7fbc4e7d": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "q826c7bb7": {
+  "explainImage": "handbook/firetruck-pullover-1.png",
+  "explainImageAlt": "Handbook illustration: Car pulling over to let fire truck pass"
+ },
+ "q8285d49b": {
+  "explainImage": "handbook/rightturn.png",
+  "explainImageAlt": "Handbook illustration: Image of a vehicle making a right turn"
+ },
+ "q87fff887": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "q8fa857c6": {
+  "image": "signs/signal-flashing-red.svg",
+  "imageAlt": "Traffic signal showing a flashing red light"
+ },
+ "q9279cc07": {
+  "image": "signs/signal-green.svg",
+  "imageAlt": "Traffic signal showing a solid green light"
+ },
+ "q92854653": {
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
+ },
+ "q955deeb7": {
+  "explainImage": "handbook/bike-right.png",
+  "explainImageAlt": "Handbook illustration: Car passing a cyclist. The car leaves enough space between itself and the bicyclist as it passes"
+ },
+ "q95bd789e": {
+  "image": "signs/signal-green.svg",
+  "imageAlt": "Traffic signal showing a solid green light"
+ },
+ "q9b2420b6": {
+  "explainImage": "handbook/mobility-devices-1024x206.png",
+  "explainImageAlt": "Handbook illustration: A tricycle, a quadricycle, a standard wheelchair, and an electric wheelchair"
+ },
+ "q9e54547e": {
+  "image": "signs/signal-red-arrow.svg",
+  "imageAlt": "Traffic signal showing a red arrow"
+ },
+ "qa043cc7e": {
+  "explainImage": "handbook/hov_2.jpg",
+  "explainImageAlt": "Handbook illustration: HOV lane sign reading Left Lane, HOV 2+, 2 or more only, when metered"
+ },
+ "qa557add5": {
+  "explainImage": "handbook/left_turn_oneway_street.png",
+  "explainImageAlt": "Handbook illustration: Left turn from a one-way street onto a one-way street"
+ },
+ "qa66b2588": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "qab0cc5a9": {
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
+ },
+ "qacb7d227": {
+  "explainImage": "handbook/center_left_turn_lane.png",
+  "explainImageAlt": "Handbook illustration: Image of cars navigating thru a Center Left Turn Lane"
+ },
+ "qacf33350": {
+  "explainImage": "handbook/stop.png",
+  "explainImageAlt": "Handbook illustration: Car seen from behind with the driver's left arm bent downward at the elbow"
+ },
+ "qacfb2933": {
+  "explainImage": "handbook/double_solid_yellow_lines.png",
+  "explainImageAlt": "Handbook illustration: Double Solid Yellow Lines. End Divided Road Sign and U-Turn OK Sign"
+ },
+ "qb06436cf": {
+  "explainImage": "handbook/impact.png",
+  "explainImageAlt": "Handbook illustration: Image showing how your body would be thrown during an traffic collision"
+ },
+ "qb62b9e98": {
+  "explainImage": "handbook/impact.png",
+  "explainImageAlt": "Handbook illustration: Image showing how your body would be thrown during an traffic collision"
+ },
+ "qb72abaad": {
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
+ },
+ "qb7ce0e1a": {
+  "image": "signs/signal-yellow-arrow.svg",
+  "imageAlt": "Traffic signal showing a yellow arrow"
+ },
+ "qb842e86d": {
+  "image": "handbook/bulldozer-1.png",
+  "imageAlt": "Bulldozer with an orange-red slow-moving vehicle triangle on its back"
+ },
+ "qb92bb5ae": {
+  "explainImage": "handbook/firetruck-pullover-1.png",
+  "explainImageAlt": "Handbook illustration: Car pulling over to let fire truck pass"
+ },
+ "qbb35d5b4": {
+  "explainImage": "handbook/rightturn.png",
+  "explainImageAlt": "Handbook illustration: Image of a vehicle making a right turn"
+ },
+ "qbb7fddde": {
+  "explainImage": "handbook/firetruck-pullover-1.png",
+  "explainImageAlt": "Handbook illustration: Car pulling over to let fire truck pass"
+ },
+ "qbc8cd147": {
+  "explainImage": "handbook/hov_2.jpg",
+  "explainImageAlt": "Handbook illustration: HOV lane sign reading Left Lane, HOV 2+, 2 or more only, when metered"
+ },
+ "qbf7465c9": {
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
+ },
+ "qc2254bce": {
+  "explainImage": "handbook/truck_driver_blind_spots-1.png",
+  "explainImageAlt": "Handbook illustration: a truck with the no-zone blind spots shaded in front, behind, and along both sides"
+ },
+ "qc972bb0b": {
+  "image": "signs/yield.svg",
+  "imageAlt": "Yield sign: a red and white downward-pointing triangle"
+ },
+ "qc9e9ee4b": {
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
+ },
+ "qcd43aab2": {
+  "explainImage": "handbook/left_turn_two_way_street.png",
+  "explainImageAlt": "Handbook illustration: Left turn from a two-way street"
+ },
+ "qcd61e8fb": {
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
+ },
+ "qcfed4726": {
+  "explainImage": "handbook/bike-right.png",
+  "explainImageAlt": "Handbook illustration: Car passing a cyclist. The car leaves enough space between itself and the bicyclist as it passes"
+ },
+ "qd27cfada": {
+  "explainImage": "handbook/roundabout-right.png",
+  "explainImageAlt": "Handbook illustration: Overhead view of yellow car making a right turn at a roundabout"
+ },
+ "qd4c8be5a": {
+  "image": "signs/signal-flashing-yellow.svg",
+  "imageAlt": "Traffic signal showing a flashing yellow light"
+ },
+ "qd6782109": {
+  "explainImage": "handbook/bicycle_lane.png",
+  "explainImageAlt": "Handbook illustration: Bicycle Lane"
+ },
+ "qda403277": {
+  "image": "handbook/bulldozer-1.png",
+  "imageAlt": "Bulldozer with an orange-red slow-moving vehicle triangle on its back"
+ },
+ "qe073aa7f": {
+  "explainImage": "handbook/firetruck-pullover-1.png",
+  "explainImageAlt": "Handbook illustration: Car pulling over to let fire truck pass"
+ },
+ "qe3c96901": {
+  "explainImage": "handbook/right_turn.png",
+  "explainImageAlt": "Handbook illustration: Car seen from behind with the driver's left arm bent upward at the elbow"
+ },
+ "qea8b3d1c": {
+  "explainImage": "handbook/parallel_parking.png",
+  "explainImageAlt": "Handbook illustration: Parallel Parking"
+ },
+ "qefbdcd43": {
+  "explainImage": "handbook/rightturn.png",
+  "explainImageAlt": "Handbook illustration: Image of a vehicle making a right turn"
+ },
+ "qf5524399": {
+  "explainImage": "handbook/truck_driver_blind_spots-1.png",
+  "explainImageAlt": "Handbook illustration: a truck with the no-zone blind spots shaded in front, behind, and along both sides"
+ },
+ "qfaf201ef": {
+  "explainImage": "handbook/center_left_turn_lane.png",
+  "explainImageAlt": "Handbook illustration: Image of cars navigating thru a Center Left Turn Lane"
+ },
+ "qfbca66d7": {
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
+ },
+ "qffe2145a": {
+  "explainImage": "handbook/roundabout-right.png",
+  "explainImageAlt": "Handbook illustration: Overhead view of yellow car making a right turn at a roundabout"
+ }
+}

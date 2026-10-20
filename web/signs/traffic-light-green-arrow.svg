@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 220" role="img" aria-label="Traffic signal with a green left-turn arrow illuminated, indicating a protected turn">
-  <rect x="10" y="6" width="80" height="208" rx="10" fill="#222222" stroke="#000000" stroke-width="3"/>
-  <circle cx="50" cy="50" r="28" fill="#3a3a3a"/>
-  <circle cx="50" cy="110" r="28" fill="#3a3a3a"/>
-  <circle cx="50" cy="170" r="28" fill="#23a846"/>
-  <!-- Green left-turn arrow on the bottom light -->
-  <path d="M 60 170 L 42 170 M 50 162 L 42 170 L 50 178" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>

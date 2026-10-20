@@ -5,6 +5,7 @@ A small, phone-first practice app for the California Class C written knowledge t
 - Random exams from a bank of about 450 questions: a full practice exam (36 questions by default) or a quick 10. The pass mark is 80%, the figure the DMV publishes.
 - The right answer and an explanation appear right after each answer, with a link to the Driver Handbook section it comes from where the handbook states it, also in the "Think this is wrong?" box.
 - A "🔥 N in a row" streak during a test, and confetti when a test is passed (more for a perfect score; skipped if the device asks for reduced motion).
+- Official illustrations from the Driver Handbook: traffic signals and signs with their questions, and parking, turning, and passing diagrams with the explanation after you answer.
 - After a missed question, take a focused test on that question's category (10 questions from that category only).
 - Flag any question you think is wrong (with an optional note), review the flagged list, and open any question directly by link (`/#/q/<id>`).
 - Per-user history: score over time, a mastery bar across all questions, per-topic accuracy (weakest first), and a review of missed questions.

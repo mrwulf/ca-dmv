@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 220" role="img" aria-label="Traffic signal with the green light illuminated">
-  <rect x="10" y="6" width="80" height="208" rx="10" fill="#222222" stroke="#000000" stroke-width="3"/>
-  <circle cx="50" cy="50" r="28" fill="#3a3a3a"/>
-  <circle cx="50" cy="110" r="28" fill="#3a3a3a"/>
-  <circle cx="50" cy="170" r="28" fill="#23a846"/>
-</svg>

@@ -316,6 +316,8 @@ type questionView struct {
 	CorrectIndex *int   `json:"correct_index,omitempty"`
 	Explanation  string `json:"explanation,omitempty"`
 	sourceView
+	ExplainImage    string `json:"explain_image,omitempty"`
+	ExplainImageAlt string `json:"explain_image_alt,omitempty"`
 }
 
 type examView struct {
@@ -346,6 +348,7 @@ func viewExam(e *exam, notes map[string]string) examView {
 			chosen, correct := a.Chosen, q.Answer
 			qv.Chosen, qv.CorrectIndex, qv.Explanation = &chosen, &correct, q.Explanation
 			qv.sourceView = sourceView{URL: q.SourceURL, Label: q.SourceLabel}
+			qv.ExplainImage, qv.ExplainImageAlt = q.ExplainImage, q.ExplainImageAlt
 		}
 		v.Questions = append(v.Questions, qv)
 	}
@@ -563,6 +566,7 @@ func (s *server) checkQuestion(w http.ResponseWriter, r *http.Request, u user) e
 	writeJSON(w, http.StatusOK, map[string]any{
 		"correct": body.Answer == q.Options[q.Answer], "correct_answer": q.Options[q.Answer], "explanation": q.Explanation,
 		"source_url": q.SourceURL, "source_label": q.SourceLabel,
+		"explain_image": q.ExplainImage, "explain_image_alt": q.ExplainImageAlt,
 	})
 	return nil
 }

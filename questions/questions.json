@@ -30,8 +30,8 @@
   "answer": 1,
   "explanation": "A flashing yellow signal warns drivers to slow down and proceed with caution; it does not require a stop.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/traffic-light-yellow.svg",
-  "imageAlt": "Traffic signal with the yellow (amber) light illuminated",
+  "image": "signs/signal-flashing-yellow.svg",
+  "imageAlt": "Traffic signal showing a flashing yellow light",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Flashing%20Yellow%20Light",
   "sourceLabel": "Driver Handbook §7, Flashing Yellow Light"
  },
@@ -120,8 +120,8 @@
   "answer": 1,
   "explanation": "A flashing red signal must be treated like a stop sign: come to a complete stop, then proceed when it is safe to do so.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/traffic-light-red.svg",
-  "imageAlt": "Traffic signal with the red light illuminated",
+  "image": "signs/signal-flashing-red.svg",
+  "imageAlt": "Traffic signal showing a flashing red light",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Flashing%20Red%20Light",
   "sourceLabel": "Driver Handbook §7, Flashing Red Light"
  },
@@ -261,7 +261,9 @@
   "image": "signs/curb-red.svg",
   "imageAlt": "Section of curb painted red",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "q12fa147a",
@@ -279,7 +281,9 @@
   "image": "signs/curb-blue.svg",
   "imageAlt": "Section of curb painted blue (disabled parking)",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "qb1d81fc1",
@@ -328,8 +332,8 @@
   "answer": 1,
   "explanation": "A steady green arrow indicates a protected movement: opposing traffic has a red light. Proceed in the direction of the arrow.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/traffic-light-green-arrow.svg",
-  "imageAlt": "Traffic signal with a green left-turn arrow illuminated",
+  "image": "signs/signal-green-arrow.svg",
+  "imageAlt": "Traffic signal showing a green arrow",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=A%20green%20arrow%20means%20GO",
   "sourceLabel": "Driver Handbook §7, Green Arrow"
  },
@@ -550,8 +554,8 @@
   "answer": 1,
   "explanation": "A steady red signal requires a complete stop. You may turn right after stopping where signs do not prohibit it.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/traffic-light-red.svg",
-  "imageAlt": "Traffic signal with the red light illuminated",
+  "image": "signs/signal-red.svg",
+  "imageAlt": "Traffic signal showing a solid red light",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Solid%20Red%20Light",
   "sourceLabel": "Driver Handbook §7, Solid Red Light"
  },
@@ -568,8 +572,8 @@
   "answer": 1,
   "explanation": "A yellow light warns that the signal is about to turn red. Stop if you can do so safely.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/traffic-light-yellow.svg",
-  "imageAlt": "Traffic signal with the yellow (amber) light illuminated",
+  "image": "signs/signal-yellow.svg",
+  "imageAlt": "Traffic signal showing a solid yellow light",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Solid%20Yellow%20Light",
   "sourceLabel": "Driver Handbook §7, Solid Yellow Light"
  },
@@ -586,8 +590,8 @@
   "answer": 1,
   "explanation": "A red arrow prohibits any movement in the direction of the arrow until the arrow turns green or the signal otherwise allows.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/traffic-light-red.svg",
-  "imageAlt": "Traffic signal with a red light (red-arrow signals follow the same rule)",
+  "image": "signs/signal-red-arrow.svg",
+  "imageAlt": "Traffic signal showing a red arrow",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Red%20Arrow",
   "sourceLabel": "Driver Handbook §7, Red Arrow"
  },
@@ -604,8 +608,8 @@
   "answer": 0,
   "explanation": "A yellow arrow signals that the protected turn is ending. Complete or clear the turn safely; do not enter on an end-of-protection yellow if you can stop.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/traffic-light-yellow.svg",
-  "imageAlt": "Traffic signal with a yellow (amber) light (yellow-arrow signals warn the protected turn is ending)",
+  "image": "signs/signal-yellow-arrow.svg",
+  "imageAlt": "Traffic signal showing a yellow arrow",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Yellow%20Arrow",
   "sourceLabel": "Driver Handbook §7, Yellow Arrow"
  },
@@ -641,7 +645,9 @@
   "explanation": "Left turn = left arm extended straight out the window.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/introduction-to-driving/#:~:text=Signaling",
-  "sourceLabel": "Driver Handbook §5, Signaling"
+  "sourceLabel": "Driver Handbook §5, Signaling",
+  "image": "signs/hand-signal-left.png",
+  "imageAlt": "Driver with the left arm extended straight out the window"
  },
  {
   "id": "q764eaaa0",
@@ -657,7 +663,9 @@
   "explanation": "Right turn = left arm bent upward at the elbow, hand pointing up.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/introduction-to-driving/#:~:text=Signaling",
-  "sourceLabel": "Driver Handbook §5, Signaling"
+  "sourceLabel": "Driver Handbook §5, Signaling",
+  "image": "signs/hand-signal-right.png",
+  "imageAlt": "Driver with the left arm bent upward at the elbow, hand pointing up"
  },
  {
   "id": "qd8cba5e4",
@@ -673,7 +681,9 @@
   "explanation": "Stop or slow = left arm bent downward at the elbow, hand pointing down.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/introduction-to-driving/#:~:text=Signaling",
-  "sourceLabel": "Driver Handbook §5, Signaling"
+  "sourceLabel": "Driver Handbook §5, Signaling",
+  "image": "signs/hand-signal-stop.png",
+  "imageAlt": "Driver with the left arm bent downward at the elbow, hand pointing down"
  },
  {
   "id": "qcd61e8fb",
@@ -691,7 +701,9 @@
   "image": "signs/curb-blue.svg",
   "imageAlt": "Section of curb painted blue (disabled parking)",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "qcabbae17",
@@ -864,8 +876,8 @@
   "answer": 0,
   "explanation": "A green light allows you to proceed when the way is clear. Yield to pedestrians and any vehicles still in the intersection.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/traffic-light-green.svg",
-  "imageAlt": "Traffic signal with the green light illuminated",
+  "image": "signs/signal-green.svg",
+  "imageAlt": "Traffic signal showing a solid green light",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Solid%20Green%20Light",
   "sourceLabel": "Driver Handbook §7, Solid Green Light"
  },
@@ -1005,7 +1017,9 @@
   "image": "signs/lane-two-way-left-turn.svg",
   "imageAlt": "Roadway with a center two-way left-turn lane",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Center%20Left%20Turn%20Lanes",
-  "sourceLabel": "Driver Handbook §6, Center Left Turn Lanes"
+  "sourceLabel": "Driver Handbook §6, Center Left Turn Lanes",
+  "explainImage": "handbook/center_left_turn_lane.png",
+  "explainImageAlt": "Handbook illustration: Image of cars navigating thru a Center Left Turn Lane"
  },
  {
   "id": "qac1ce877",
@@ -1053,7 +1067,9 @@
   "explanation": "This emblem marks vehicles that go 25 mph or less, like farm equipment. Slow down early.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Slow%2Dmoving%20Vehicles",
-  "sourceLabel": "Driver Handbook §7, Slow-moving Vehicles"
+  "sourceLabel": "Driver Handbook §7, Slow-moving Vehicles",
+  "image": "handbook/bulldozer-1.png",
+  "imageAlt": "Bulldozer with an orange-red slow-moving vehicle triangle on its back"
  },
  {
   "id": "q452ad8da",
@@ -1068,7 +1084,9 @@
   "explanation": "A flashing red light means the same thing as a STOP sign.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Flashing%20Red%20Light",
-  "sourceLabel": "Driver Handbook §7, Flashing Red Light"
+  "sourceLabel": "Driver Handbook §7, Flashing Red Light",
+  "image": "signs/signal-flashing-red.svg",
+  "imageAlt": "Traffic signal showing a flashing red light"
  },
  {
   "id": "q6eae7f23",
@@ -1083,7 +1101,9 @@
   "explanation": "Flashing yellow = proceed carefully. You don't have to stop.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Flashing%20Yellow%20Light",
-  "sourceLabel": "Driver Handbook §7, Flashing Yellow Light"
+  "sourceLabel": "Driver Handbook §7, Flashing Yellow Light",
+  "image": "signs/signal-flashing-yellow.svg",
+  "imageAlt": "Traffic signal showing a flashing yellow light"
  },
  {
   "id": "q76d2476e",
@@ -1098,7 +1118,9 @@
   "explanation": "A red arrow means STOP. Stay stopped until a green arrow or green light appears — you may not turn on a red arrow.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Red%20Arrow",
-  "sourceLabel": "Driver Handbook §7, Red Arrow"
+  "sourceLabel": "Driver Handbook §7, Red Arrow",
+  "image": "signs/signal-red-arrow.svg",
+  "imageAlt": "Traffic signal showing a red arrow"
  },
  {
   "id": "q2d1c6e80",
@@ -1113,7 +1135,9 @@
   "explanation": "Steady yellow warns that the light is about to turn red. Stop if you can do it safely; if you're already in the intersection, carefully continue.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Solid%20Yellow%20Light",
-  "sourceLabel": "Driver Handbook §7, Solid Yellow Light"
+  "sourceLabel": "Driver Handbook §7, Solid Yellow Light",
+  "image": "signs/signal-yellow.svg",
+  "imageAlt": "Traffic signal showing a solid yellow light"
  },
  {
   "id": "q0af5576f",
@@ -1158,7 +1182,9 @@
   "explanation": "With a green arrow, oncoming traffic has a red light. Still yield to any vehicles or pedestrians already in the intersection.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=A%20green%20arrow%20means%20GO",
-  "sourceLabel": "Driver Handbook §7, Green Arrow"
+  "sourceLabel": "Driver Handbook §7, Green Arrow",
+  "image": "signs/signal-green-arrow.svg",
+  "imageAlt": "Traffic signal showing a green arrow"
  },
  {
   "id": "q7238fbc8",
@@ -1173,7 +1199,9 @@
   "explanation": "A flashing yellow arrow means the turn is allowed but NOT protected. Yield to oncoming traffic and pedestrians, then turn when it's safe.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Flashing%20Yellow%20Arrow",
-  "sourceLabel": "Driver Handbook §7, Flashing Yellow Arrow"
+  "sourceLabel": "Driver Handbook §7, Flashing Yellow Arrow",
+  "image": "signs/signal-flashing-yellow-arrow.svg",
+  "imageAlt": "Traffic signal showing a flashing yellow arrow"
  },
  {
   "id": "q95bd789e",
@@ -1188,7 +1216,9 @@
   "explanation": "Green means go if it's safe. Yield to vehicles, bicyclists, and pedestrians still in the intersection.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Solid%20Green%20Light",
-  "sourceLabel": "Driver Handbook §7, Solid Green Light"
+  "sourceLabel": "Driver Handbook §7, Solid Green Light",
+  "image": "signs/signal-green.svg",
+  "imageAlt": "Traffic signal showing a solid green light"
  },
  {
   "id": "q9b969ba9",
@@ -1229,7 +1259,9 @@
   "explanation": "Red circle + slash = prohibited (no U-turn, no left turn, no parking, and so on).",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Red%20Circle%20with%20a%20Red%20Line%20Through%20It",
-  "sourceLabel": "Driver Handbook §7, Red Circle with a Red Line Through It"
+  "sourceLabel": "Driver Handbook §7, Red Circle with a Red Line Through It",
+  "image": "signs/no-u-turn.svg",
+  "imageAlt": "No U-turn sign: a red circle with a slash through a U-turn arrow"
  },
  {
   "id": "qe0f2c54e",
@@ -1662,7 +1694,9 @@
   "explanation": "Yield to circulating traffic, then travel counterclockwise (to the right).",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Roundabouts",
-  "sourceLabel": "Driver Handbook §7, Roundabouts"
+  "sourceLabel": "Driver Handbook §7, Roundabouts",
+  "explainImage": "handbook/roundabout-right.png",
+  "explainImageAlt": "Handbook illustration: Overhead view of yellow car making a right turn at a roundabout"
  },
  {
   "id": "qb8d3ae86",
@@ -1782,7 +1816,9 @@
   "explanation": "Use the center left-turn lane only to start or finish a left turn (or a legal U-turn), and for no more than 200 feet.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Center%20Left%20Turn%20Lanes",
-  "sourceLabel": "Driver Handbook §6, Center Left Turn Lanes"
+  "sourceLabel": "Driver Handbook §6, Center Left Turn Lanes",
+  "explainImage": "handbook/center_left_turn_lane.png",
+  "explainImageAlt": "Handbook illustration: Image of cars navigating thru a Center Left Turn Lane"
  },
  {
   "id": "q8285d49b",
@@ -1797,7 +1833,9 @@
   "explanation": "Check for bikes, signal, and move into the bike lane no more than 200 feet before the corner, then turn.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Right%20Turns",
-  "sourceLabel": "Driver Handbook §6, Right Turns"
+  "sourceLabel": "Driver Handbook §6, Right Turns",
+  "explainImage": "handbook/rightturn.png",
+  "explainImageAlt": "Handbook illustration: Image of a vehicle making a right turn"
  },
  {
   "id": "q01830fc2",
@@ -1842,7 +1880,9 @@
   "explanation": "Two sets of solid double yellow lines spaced 2+ feet apart are a barrier. Don't drive over them or turn across them, except at marked openings.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Double%20Solid%20Yellow%20Lines",
-  "sourceLabel": "Driver Handbook §6, Double Solid Yellow Lines"
+  "sourceLabel": "Driver Handbook §6, Double Solid Yellow Lines",
+  "explainImage": "handbook/double_solid_yellow_lines.png",
+  "explainImageAlt": "Handbook illustration: Double Solid Yellow Lines. End Divided Road Sign and U-Turn OK Sign"
  },
  {
   "id": "q836d6176",
@@ -1962,7 +2002,9 @@
   "explanation": "Start close to the center line and end in the left lane of the new street, then move over when it's safe.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Examples%20of%20Turns",
-  "sourceLabel": "Driver Handbook §6, Examples of Turns"
+  "sourceLabel": "Driver Handbook §6, Examples of Turns",
+  "explainImage": "handbook/left_turn_two_way_street.png",
+  "explainImageAlt": "Handbook illustration: Left turn from a two-way street"
  },
  {
   "id": "qefbdcd43",
@@ -1977,7 +2019,9 @@
   "explanation": "Begin and end a right turn close to the right edge of the road. Don't swing wide.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Right%20Turns",
-  "sourceLabel": "Driver Handbook §6, Right Turns"
+  "sourceLabel": "Driver Handbook §6, Right Turns",
+  "explainImage": "handbook/rightturn.png",
+  "explainImageAlt": "Handbook illustration: Image of a vehicle making a right turn"
  },
  {
   "id": "q3760cc65",
@@ -1992,7 +2036,9 @@
   "explanation": "Arm straight out = left turn.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/introduction-to-driving/#:~:text=Signaling",
-  "sourceLabel": "Driver Handbook §5, Signaling"
+  "sourceLabel": "Driver Handbook §5, Signaling",
+  "explainImage": "handbook/left_turn-1.png",
+  "explainImageAlt": "Handbook illustration: Car seen from behind with the driver's left arm held straight out of the window"
  },
  {
   "id": "qe3c96901",
@@ -2007,7 +2053,9 @@
   "explanation": "Arm bent up = right turn.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/introduction-to-driving/#:~:text=Signaling",
-  "sourceLabel": "Driver Handbook §5, Signaling"
+  "sourceLabel": "Driver Handbook §5, Signaling",
+  "explainImage": "handbook/right_turn.png",
+  "explainImageAlt": "Handbook illustration: Car seen from behind with the driver's left arm bent upward at the elbow"
  },
  {
   "id": "qacf33350",
@@ -2022,7 +2070,9 @@
   "explanation": "Arm bent down = slowing or stopping.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/introduction-to-driving/#:~:text=Signaling",
-  "sourceLabel": "Driver Handbook §5, Signaling"
+  "sourceLabel": "Driver Handbook §5, Signaling",
+  "explainImage": "handbook/stop.png",
+  "explainImageAlt": "Handbook illustration: Car seen from behind with the driver's left arm bent downward at the elbow"
  },
  {
   "id": "q9ec173c9",
@@ -2140,7 +2190,9 @@
   "explanation": "Park parallel and within 18 inches of the curb.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parallel%20Parking",
-  "sourceLabel": "Driver Handbook §6, Parallel Parking"
+  "sourceLabel": "Driver Handbook §6, Parallel Parking",
+  "explainImage": "handbook/parallel_parking.png",
+  "explainImageAlt": "Handbook illustration: Parallel Parking"
  },
  {
   "id": "q543d172a",
@@ -2155,7 +2207,9 @@
   "explanation": "Downhill: turn your wheels into the curb so the car rolls into it, not into traffic.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20on%20a%20Hill",
-  "sourceLabel": "Driver Handbook §6, Parking on a Hill"
+  "sourceLabel": "Driver Handbook §6, Parking on a Hill",
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
  },
  {
   "id": "qbf7465c9",
@@ -2170,7 +2224,9 @@
   "explanation": "Uphill with a curb: turn your wheels away from the curb (to the left), then let the car roll back a few inches so the tire rests against the curb.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20on%20a%20Hill",
-  "sourceLabel": "Driver Handbook §6, Parking on a Hill"
+  "sourceLabel": "Driver Handbook §6, Parking on a Hill",
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
  },
  {
   "id": "q92854653",
@@ -2185,7 +2241,9 @@
   "explanation": "No curb? Turn your wheels toward the edge of the road, uphill or downhill.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20on%20a%20Hill",
-  "sourceLabel": "Driver Handbook §6, Parking on a Hill"
+  "sourceLabel": "Driver Handbook §6, Parking on a Hill",
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
  },
  {
   "id": "q26aad086",
@@ -2200,7 +2258,9 @@
   "explanation": "Red curbs are completely off-limits (buses may stop at red bus zones).",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "q87fff887",
@@ -2215,7 +2275,9 @@
   "explanation": "White curbs are for quick passenger or mail stops only.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "q637aae12",
@@ -2230,7 +2292,9 @@
   "explanation": "Green curbs allow short, time-limited parking (the limit is posted or painted).",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "q392c4b9e",
@@ -2245,7 +2309,9 @@
   "explanation": "Yellow curbs are loading zones, for no longer than the posted time. Non-commercial drivers usually must stay with the vehicle.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "q579c6c9e",
@@ -2260,7 +2326,9 @@
   "explanation": "Blue = disabled parking only. Fines are steep.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "qa7d12264",
@@ -2320,7 +2388,9 @@
   "explanation": "California law requires at least 3 feet. If you can't give that much room, slow down and wait.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Passing%20a%20Bicyclist",
-  "sourceLabel": "Driver Handbook §7, Passing a Bicyclist"
+  "sourceLabel": "Driver Handbook §7, Passing a Bicyclist",
+  "explainImage": "handbook/bike-right.png",
+  "explainImageAlt": "Handbook illustration: Car passing a cyclist. The car leaves enough space between itself and the bicyclist as it passes"
  },
  {
   "id": "q6c54f27a",
@@ -2335,7 +2405,9 @@
   "explanation": "California now requires drivers to change lanes to pass a bicyclist when another lane is available. If not, give at least 3 feet.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Passing%20a%20Bicyclist",
-  "sourceLabel": "Driver Handbook §7, Passing a Bicyclist"
+  "sourceLabel": "Driver Handbook §7, Passing a Bicyclist",
+  "explainImage": "handbook/bike-right.png",
+  "explainImageAlt": "Handbook illustration: Car passing a cyclist. The car leaves enough space between itself and the bicyclist as it passes"
  },
  {
   "id": "qe073aa7f",
@@ -2350,7 +2422,9 @@
   "explanation": "Drive to the right edge of the road and stop until it passes.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Emergency%20Vehicles",
-  "sourceLabel": "Driver Handbook §7, Emergency Vehicles"
+  "sourceLabel": "Driver Handbook §7, Emergency Vehicles",
+  "explainImage": "handbook/firetruck-pullover-1.png",
+  "explainImageAlt": "Handbook illustration: Car pulling over to let fire truck pass"
  },
  {
   "id": "qb92bb5ae",
@@ -2365,7 +2439,9 @@
   "explanation": "Never stop inside an intersection. Continue through, then pull to the right and stop.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Emergency%20Vehicles",
-  "sourceLabel": "Driver Handbook §7, Emergency Vehicles"
+  "sourceLabel": "Driver Handbook §7, Emergency Vehicles",
+  "explainImage": "handbook/firetruck-pullover-1.png",
+  "explainImageAlt": "Handbook illustration: Car pulling over to let fire truck pass"
  },
  {
   "id": "qe59082b5",
@@ -2440,7 +2516,9 @@
   "explanation": "If you can't see the driver in their mirror, you're in a blind spot. Move ahead or drop back.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Blind%20Spots%20(the%20No%20Zone)",
-  "sourceLabel": "Driver Handbook §7, Blind Spots (the No Zone)"
+  "sourceLabel": "Driver Handbook §7, Blind Spots (the No Zone)",
+  "explainImage": "handbook/truck_driver_blind_spots-1.png",
+  "explainImageAlt": "Handbook illustration: a truck with the no-zone blind spots shaded in front, behind, and along both sides"
  },
  {
   "id": "q3604a19e",
@@ -2500,7 +2578,9 @@
   "explanation": "Cars use a bike lane only briefly: to park where allowed, to enter or leave the road, or within 200 feet of a turn.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Bicycle%20Lanes",
-  "sourceLabel": "Driver Handbook §6, Bicycle Lanes"
+  "sourceLabel": "Driver Handbook §6, Bicycle Lanes",
+  "explainImage": "handbook/bicycle_lane.png",
+  "explainImageAlt": "Handbook illustration: Bicycle Lane"
  },
  {
   "id": "qc15fe80c",
@@ -2558,7 +2638,9 @@
   "explanation": "Stop behind the nearest door until passengers have safely crossed.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Buses%2C%20Streetcars%2C%20Trolleys",
-  "sourceLabel": "Driver Handbook §7, Buses, Streetcars, Trolleys"
+  "sourceLabel": "Driver Handbook §7, Buses, Streetcars, Trolleys",
+  "explainImage": "handbook/bus-safety-zone-1.png",
+  "explainImageAlt": "Handbook illustration: Trolley next to demarked safe zone"
  },
  {
   "id": "q65351ddf",
@@ -2798,7 +2880,9 @@
   "explanation": "Quick shoulder checks catch what mirrors miss.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/safe-driving/#:~:text=These%20are%20areas%20around%20the%20vehicle%20that%20a%20driver%20cannot%20see",
-  "sourceLabel": "Driver Handbook §8, Blind Spots"
+  "sourceLabel": "Driver Handbook §8, Blind Spots",
+  "explainImage": "handbook/blind-spots.png",
+  "explainImageAlt": "Handbook illustration: Diagram of a car's blind spots beside and behind it"
  },
  {
   "id": "q0231c597",
@@ -2961,7 +3045,9 @@
   "explanation": "Everyone in the car must be buckled up (kids in proper car seats).",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/safe-driving-cont1/#:~:text=Seat%20Belts",
-  "sourceLabel": "Driver Handbook §8, Seat Belts"
+  "sourceLabel": "Driver Handbook §8, Seat Belts",
+  "explainImage": "handbook/impact.png",
+  "explainImageAlt": "Handbook illustration: Image showing how your body would be thrown during an traffic collision"
  },
  {
   "id": "q6bcfa247",
@@ -3343,7 +3429,9 @@
   "explanation": "Signs show the minimum number of people per vehicle and the hours the carpool rules apply.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Carpool%2FHigh%2DOccupancy%20Vehicle%20(HOV)%20Lanes",
-  "sourceLabel": "Driver Handbook §6, Carpool/High-Occupancy Vehicle (HOV) Lanes"
+  "sourceLabel": "Driver Handbook §6, Carpool/High-Occupancy Vehicle (HOV) Lanes",
+  "explainImage": "handbook/hov_2.jpg",
+  "explainImageAlt": "Handbook illustration: HOV lane sign reading Left Lane, HOV 2+, 2 or more only, when metered"
  },
  {
   "id": "qf8096c1d",
@@ -3472,7 +3560,9 @@
   "explanation": "Get everyone out now. Run toward the train at an angle, away from the tracks, so flying debris doesn't hit you. Then call the number on the crossing sign or 911.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/safe-driving-cont2/#:~:text=Disabled%20Vehicles%20on%20Railroad%20Tracks",
-  "sourceLabel": "Driver Handbook §8, Disabled Vehicles on Railroad Tracks"
+  "sourceLabel": "Driver Handbook §8, Disabled Vehicles on Railroad Tracks",
+  "explainImage": "handbook/disabled_vehicle_railroad.png",
+  "explainImageAlt": "Handbook illustration: A car is stalled on railroad tracks with an oncoming train. The image includes overlaid text reading “Crash area” marking the hazardous zone in front of the train in the direction it is traveling"
  },
  {
   "id": "q604ddab3",
@@ -3543,7 +3633,9 @@
   "explanation": "Stop (from either direction) and wait until the red lights turn off — kids may be crossing.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Around%20Children",
-  "sourceLabel": "Driver Handbook §7, Around Children"
+  "sourceLabel": "Driver Handbook §7, Around Children",
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
  },
  {
   "id": "qfbca66d7",
@@ -3558,7 +3650,9 @@
   "explanation": "Flashing yellow warns that the bus is about to stop and turn on its red lights.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Around%20Children",
-  "sourceLabel": "Driver Handbook §7, Around Children"
+  "sourceLabel": "Driver Handbook §7, Around Children",
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
  },
  {
   "id": "q0e6f5741",
@@ -3573,7 +3667,9 @@
   "explanation": "Only traffic on the other side of a divided highway, or a road with 2+ lanes each way, may keep going (carefully).",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Around%20Children",
-  "sourceLabel": "Driver Handbook §7, Around Children"
+  "sourceLabel": "Driver Handbook §7, Around Children",
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
  },
  {
   "id": "q1b103038",
@@ -3588,7 +3684,9 @@
   "explanation": "Penalties can include a fine up to $1,000 and losing your license for a year.",
   "source": "road-ready-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Around%20Children",
-  "sourceLabel": "Driver Handbook §7, Around Children"
+  "sourceLabel": "Driver Handbook §7, Around Children",
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
  },
  {
   "id": "q9359c9cc",
@@ -3860,7 +3958,9 @@
   "explanation": "On an undivided road, traffic in both directions must stop when a school bus's red lights are flashing and remain stopped until the lights stop flashing.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Around%20Children",
-  "sourceLabel": "Driver Handbook §7, Around Children"
+  "sourceLabel": "Driver Handbook §7, Around Children",
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
  },
  {
   "id": "q597f21a8",
@@ -3876,7 +3976,9 @@
   "explanation": "California law requires drivers to pull to the right edge of the road, clear of any intersection, and stop until the emergency vehicle has passed.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Emergency%20Vehicles",
-  "sourceLabel": "Driver Handbook §7, Emergency Vehicles"
+  "sourceLabel": "Driver Handbook §7, Emergency Vehicles",
+  "explainImage": "handbook/firetruck-pullover-1.png",
+  "explainImageAlt": "Handbook illustration: Car pulling over to let fire truck pass"
  },
  {
   "id": "q19dc37a2",
@@ -4164,7 +4266,9 @@
   "explanation": "A center two-way left-turn lane (marked by yellow lines, broken inside / solid outside) is used for left turns from either direction; it is not a passing or driving lane.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Center%20Left%20Turn%20Lanes",
-  "sourceLabel": "Driver Handbook §6, Center Left Turn Lanes"
+  "sourceLabel": "Driver Handbook §6, Center Left Turn Lanes",
+  "explainImage": "handbook/center_left_turn_lane.png",
+  "explainImageAlt": "Handbook illustration: Image of cars navigating thru a Center Left Turn Lane"
  },
  {
   "id": "q252b3cf7",
@@ -4196,7 +4300,9 @@
   "explanation": "Most California HOV lanes require 2+ occupants; some require 3+. Always check the posted sign for the specific minimum.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Carpool%2FHigh%2DOccupancy%20Vehicle%20(HOV)%20Lanes",
-  "sourceLabel": "Driver Handbook §6, Carpool/High-Occupancy Vehicle (HOV) Lanes"
+  "sourceLabel": "Driver Handbook §6, Carpool/High-Occupancy Vehicle (HOV) Lanes",
+  "explainImage": "handbook/hov_2.jpg",
+  "explainImageAlt": "Handbook illustration: HOV lane sign reading Left Lane, HOV 2+, 2 or more only, when metered"
  },
  {
   "id": "q72ccfe2e",
@@ -4212,7 +4318,9 @@
   "explanation": "When parallel parking, your vehicle's wheels must be within 18 inches of the curb.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parallel%20Parking",
-  "sourceLabel": "Driver Handbook §6, Parallel Parking"
+  "sourceLabel": "Driver Handbook §6, Parallel Parking",
+  "explainImage": "handbook/parallel_parking.png",
+  "explainImageAlt": "Handbook illustration: Parallel Parking"
  },
  {
   "id": "q1127af69",
@@ -4228,7 +4336,9 @@
   "explanation": "Facing downhill with a curb: turn the front wheels toward the curb so the vehicle rolls into the curb if the brake fails.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20on%20a%20Hill",
-  "sourceLabel": "Driver Handbook §6, Parking on a Hill"
+  "sourceLabel": "Driver Handbook §6, Parking on a Hill",
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
  },
  {
   "id": "qab0cc5a9",
@@ -4244,7 +4354,9 @@
   "explanation": "On any hill without a curb, turn your front wheels toward the side of the road so a runaway vehicle rolls away from traffic.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20on%20a%20Hill",
-  "sourceLabel": "Driver Handbook §6, Parking on a Hill"
+  "sourceLabel": "Driver Handbook §6, Parking on a Hill",
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
  },
  {
   "id": "q98953b09",
@@ -4276,7 +4388,9 @@
   "explanation": "A white curb permits stopping only long enough to load or unload passengers or mail.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "q55942d71",
@@ -4292,7 +4406,9 @@
   "explanation": "A green curb allows parking for a limited time only; the time limit is posted on a sign or painted on the curb.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "q7fbc4e7d",
@@ -4308,7 +4424,9 @@
   "explanation": "Yellow curbs are loading zones — stop only long enough to load or unload, no longer than the time posted.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "q58025261",
@@ -4434,7 +4552,9 @@
   "explanation": "California's Three Feet for Safety Act requires drivers to leave at least 3 feet between their vehicle and a bicyclist when passing.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Passing%20a%20Bicyclist",
-  "sourceLabel": "Driver Handbook §7, Passing a Bicyclist"
+  "sourceLabel": "Driver Handbook §7, Passing a Bicyclist",
+  "explainImage": "handbook/bike-right.png",
+  "explainImageAlt": "Handbook illustration: Car passing a cyclist. The car leaves enough space between itself and the bicyclist as it passes"
  },
  {
   "id": "qfe945cde",
@@ -4466,7 +4586,9 @@
   "explanation": "Large trucks have significant blind spots ('No-Zones') in front, on both sides, and directly behind. If you cannot see the driver in their mirror, they cannot see you.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Blind%20Spots%20(the%20No%20Zone)",
-  "sourceLabel": "Driver Handbook §7, Blind Spots (the No Zone)"
+  "sourceLabel": "Driver Handbook §7, Blind Spots (the No Zone)",
+  "explainImage": "handbook/truck_driver_blind_spots-1.png",
+  "explainImageAlt": "Handbook illustration: a truck with the no-zone blind spots shaded in front, behind, and along both sides"
  },
  {
   "id": "qac166a76",
@@ -4514,7 +4636,9 @@
   "explanation": "An orange triangle (slow-moving vehicle emblem) warns that the vehicle ahead travels 25 mph or less.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Slow%2Dmoving%20Vehicles",
-  "sourceLabel": "Driver Handbook §7, Slow-moving Vehicles"
+  "sourceLabel": "Driver Handbook §7, Slow-moving Vehicles",
+  "image": "handbook/bulldozer-1.png",
+  "imageAlt": "Bulldozer with an orange-red slow-moving vehicle triangle on its back"
  },
  {
   "id": "q5301efe2",
@@ -4562,7 +4686,9 @@
   "explanation": "California law requires all front-seat occupants and any passenger under 16 to wear a seat belt or proper restraint, regardless of seating position.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/safe-driving-cont1/#:~:text=Seat%20Belts",
-  "sourceLabel": "Driver Handbook §8, Seat Belts"
+  "sourceLabel": "Driver Handbook §8, Seat Belts",
+  "explainImage": "handbook/impact.png",
+  "explainImageAlt": "Handbook illustration: Image showing how your body would be thrown during an traffic collision"
  },
  {
   "id": "q1f020aa5",
@@ -4722,7 +4848,9 @@
   "explanation": "A yield sign requires you to slow down and yield the right-of-way to other traffic and pedestrians; stop only if necessary.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Red%20YIELD%20Sign",
-  "sourceLabel": "Driver Handbook §7, Red YIELD Sign"
+  "sourceLabel": "Driver Handbook §7, Red YIELD Sign",
+  "image": "signs/yield.svg",
+  "imageAlt": "Yield sign: a red and white downward-pointing triangle"
  },
  {
   "id": "q45eb5208",
@@ -4814,7 +4942,9 @@
   "explanation": "Begin a right turn from the right-most lane allowed for your direction. Complete the turn into the right-most lane on the cross street.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Right%20Turns",
-  "sourceLabel": "Driver Handbook §6, Right Turns"
+  "sourceLabel": "Driver Handbook §6, Right Turns",
+  "explainImage": "handbook/rightturn.png",
+  "explainImageAlt": "Handbook illustration: Image of a vehicle making a right turn"
  },
  {
   "id": "q13743dd7",
@@ -4830,7 +4960,9 @@
   "explanation": "Make left turns from the lane closest to the center line and complete the turn into the lane closest to the center line on the cross street.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Left%20Turns",
-  "sourceLabel": "Driver Handbook §6, Left Turns"
+  "sourceLabel": "Driver Handbook §6, Left Turns",
+  "explainImage": "handbook/left_turn.png",
+  "explainImageAlt": "Handbook illustration: Left Turn"
  },
  {
   "id": "qf4d81b10",
@@ -5300,7 +5432,9 @@
   "explanation": "Vehicles entering a roundabout must yield to traffic already circulating inside it.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Roundabouts",
-  "sourceLabel": "Driver Handbook §7, Roundabouts"
+  "sourceLabel": "Driver Handbook §7, Roundabouts",
+  "explainImage": "handbook/roundabout-right.png",
+  "explainImageAlt": "Handbook illustration: Overhead view of yellow car making a right turn at a roundabout"
  },
  {
   "id": "q562efa9d",
@@ -5316,7 +5450,9 @@
   "explanation": "On a divided highway, oncoming traffic separated by a median or divider is not required to stop for a school bus loading or unloading children.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Around%20Children",
-  "sourceLabel": "Driver Handbook §7, Around Children"
+  "sourceLabel": "Driver Handbook §7, Around Children",
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
  },
  {
   "id": "q9d9db419",
@@ -5538,7 +5674,9 @@
   "explanation": "When 3 feet isn't possible, slow to a safe speed and pass only when conditions make it safe for the bicyclist.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Passing%20a%20Bicyclist",
-  "sourceLabel": "Driver Handbook §7, Passing a Bicyclist"
+  "sourceLabel": "Driver Handbook §7, Passing a Bicyclist",
+  "explainImage": "handbook/bike-right.png",
+  "explainImageAlt": "Handbook illustration: Car passing a cyclist. The car leaves enough space between itself and the bicyclist as it passes"
  },
  {
   "id": "qf3102b0f",
@@ -5570,7 +5708,9 @@
   "explanation": "Large trucks have significant blind spots; if you can't see the driver in the mirror, the driver can't see you.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Blind%20Spots%20(the%20No%20Zone)",
-  "sourceLabel": "Driver Handbook §7, Blind Spots (the No Zone)"
+  "sourceLabel": "Driver Handbook §7, Blind Spots (the No Zone)",
+  "explainImage": "handbook/truck_driver_blind_spots-1.png",
+  "explainImageAlt": "Handbook illustration: a truck with the no-zone blind spots shaded in front, behind, and along both sides"
  },
  {
   "id": "q70b5a4a1",
@@ -5586,7 +5726,9 @@
   "explanation": "Bicyclists in a left-turn lane have the same rights as a vehicle making a left turn.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Bicyclist%20Responsibilities",
-  "sourceLabel": "Driver Handbook §7, Bicyclist Responsibilities"
+  "sourceLabel": "Driver Handbook §7, Bicyclist Responsibilities",
+  "explainImage": "handbook/bike-turn-1.png",
+  "explainImageAlt": "Handbook illustration: Intersection showing options for bicyclist to turn left or go straight. The bicyclist uses the left lane to turn left. To go straight, the cyclist used the inside line of the right lane to enter the intersection, then shifts to the bike lane as they exit the intersection"
  },
  {
   "id": "qf095d8d2",
@@ -5694,7 +5836,9 @@
   "explanation": "Do not enter an intersection against a red light. Stay put until the emergency vehicle has passed; the driver will navigate around you.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Emergency%20Vehicles",
-  "sourceLabel": "Driver Handbook §7, Emergency Vehicles"
+  "sourceLabel": "Driver Handbook §7, Emergency Vehicles",
+  "explainImage": "handbook/firetruck-pullover-1.png",
+  "explainImageAlt": "Handbook illustration: Car pulling over to let fire truck pass"
  },
  {
   "id": "q8bbe6824",
@@ -5788,7 +5932,9 @@
   "explanation": "Downhill with a curb: turn wheels toward the curb so a runaway vehicle rolls into the curb and stops.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20on%20a%20Hill",
-  "sourceLabel": "Driver Handbook §6, Parking on a Hill"
+  "sourceLabel": "Driver Handbook §6, Parking on a Hill",
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
  },
  {
   "id": "q7bf0779e",
@@ -5820,7 +5966,9 @@
   "explanation": "The center two-way left-turn lane is for left turns from either direction; it is not a passing or driving lane.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Center%20Left%20Turn%20Lanes",
-  "sourceLabel": "Driver Handbook §6, Center Left Turn Lanes"
+  "sourceLabel": "Driver Handbook §6, Center Left Turn Lanes",
+  "explainImage": "handbook/center_left_turn_lane.png",
+  "explainImageAlt": "Handbook illustration: Image of cars navigating thru a Center Left Turn Lane"
  },
  {
   "id": "qcc112e11",
@@ -5852,7 +6000,9 @@
   "explanation": "Drivers may cross a bike lane briefly to turn, enter or leave a road, or where signs allow — but must yield to cyclists.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Bicycle%20Lanes",
-  "sourceLabel": "Driver Handbook §6, Bicycle Lanes"
+  "sourceLabel": "Driver Handbook §6, Bicycle Lanes",
+  "explainImage": "handbook/bicycle_lane.png",
+  "explainImageAlt": "Handbook illustration: Bicycle Lane"
  },
  {
   "id": "q35518ac2",
@@ -5868,7 +6018,9 @@
   "explanation": "Most HOV lanes in California require 2+ occupants; some require 3+. Always read the posted sign for the exact occupancy and hours.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Carpool%2FHigh%2DOccupancy%20Vehicle%20(HOV)%20Lanes",
-  "sourceLabel": "Driver Handbook §6, Carpool/High-Occupancy Vehicle (HOV) Lanes"
+  "sourceLabel": "Driver Handbook §6, Carpool/High-Occupancy Vehicle (HOV) Lanes",
+  "explainImage": "handbook/hov_2.jpg",
+  "explainImageAlt": "Handbook illustration: HOV lane sign reading Left Lane, HOV 2+, 2 or more only, when metered"
  },
  {
   "id": "qcaeeac87",
@@ -6040,7 +6192,9 @@
   "explanation": "Slow down and prepare to yield. The emergency vehicle could be in any direction; finding it before reacting prevents a collision.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Emergency%20Vehicles",
-  "sourceLabel": "Driver Handbook §7, Emergency Vehicles"
+  "sourceLabel": "Driver Handbook §7, Emergency Vehicles",
+  "explainImage": "handbook/firetruck-pullover-1.png",
+  "explainImageAlt": "Handbook illustration: Car pulling over to let fire truck pass"
  },
  {
   "id": "q70b5230d",
@@ -6182,7 +6336,9 @@
   "explanation": "Stay back so the truck's driver can see you in their mirrors and you can see traffic ahead. Trucks have huge blind spots directly behind.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Blind%20Spots%20(the%20No%20Zone)",
-  "sourceLabel": "Driver Handbook §7, Blind Spots (the No Zone)"
+  "sourceLabel": "Driver Handbook §7, Blind Spots (the No Zone)",
+  "explainImage": "handbook/truck_driver_blind_spots-1.png",
+  "explainImageAlt": "Handbook illustration: a truck with the no-zone blind spots shaded in front, behind, and along both sides"
  },
  {
   "id": "q62622046",
@@ -6246,7 +6402,9 @@
   "explanation": "U.S. roundabouts circulate counterclockwise. Yield to traffic in the circle, then merge into a gap.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Roundabouts",
-  "sourceLabel": "Driver Handbook §7, Roundabouts"
+  "sourceLabel": "Driver Handbook §7, Roundabouts",
+  "explainImage": "handbook/roundabout-right.png",
+  "explainImageAlt": "Handbook illustration: Overhead view of yellow car making a right turn at a roundabout"
  },
  {
   "id": "q6e5f5851",
@@ -6374,7 +6532,9 @@
   "explanation": "California law requires parallel-parked vehicles to be within 18 inches of the curb.",
   "source": "dmv-knowledge-test-ca",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parallel%20Parking",
-  "sourceLabel": "Driver Handbook §6, Parallel Parking"
+  "sourceLabel": "Driver Handbook §6, Parallel Parking",
+  "explainImage": "handbook/parallel_parking.png",
+  "explainImageAlt": "Handbook illustration: Parallel Parking"
  },
  {
   "id": "qbe85ea51",
@@ -6435,7 +6595,9 @@
   "explanation": "Pull up alongside the vehicle in front of the open space, then back into the space.",
   "source": "dmv-sample-1",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parallel%20Parking",
-  "sourceLabel": "Driver Handbook §6, Parallel Parking"
+  "sourceLabel": "Driver Handbook §6, Parallel Parking",
+  "explainImage": "handbook/find_a_space-edited.png",
+  "explainImageAlt": "Handbook illustration: Find a parallel parking space"
  },
  {
   "id": "q08343c85",
@@ -6480,7 +6642,9 @@
   "explanation": "Blue curbs are reserved for people with a disabled person placard or license plate.",
   "source": "dmv-sample-1",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "q7d14d6fa",
@@ -6495,7 +6659,9 @@
   "explanation": "Flashing yellow lights warn that the bus is about to stop. Slow down and get ready to stop. Flashing red means stop.",
   "source": "dmv-sample-1",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Around%20Children",
-  "sourceLabel": "Driver Handbook §7, Around Children"
+  "sourceLabel": "Driver Handbook §7, Around Children",
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
  },
  {
   "id": "q542761c9",
@@ -6555,7 +6721,9 @@
   "explanation": "Pedestrians, including people in motorized wheelchairs, have the right-of-way. Stay stopped until they have finished crossing.",
   "source": "dmv-sample-2",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=When%20there%20is%20a%20pedestrian%20crossing%20a%20roadway%20with%20or%20without%20a%20crosswalk",
-  "sourceLabel": "Driver Handbook §7, Pedestrians"
+  "sourceLabel": "Driver Handbook §7, Pedestrians",
+  "explainImage": "handbook/mobility-devices-1024x206.png",
+  "explainImageAlt": "Handbook illustration: A tricycle, a quadricycle, a standard wheelchair, and an electric wheelchair"
  },
  {
   "id": "q42452dd4",
@@ -6570,7 +6738,9 @@
   "explanation": "Large trucks have big blind spots on all sides (the No-Zones) and need much more room to stop. If you can't see the driver's mirrors, they can't see you.",
   "source": "dmv-sample-2",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Blind%20Spots%20(the%20No%20Zone)",
-  "sourceLabel": "Driver Handbook §7, Blind Spots (the No Zone)"
+  "sourceLabel": "Driver Handbook §7, Blind Spots (the No Zone)",
+  "explainImage": "handbook/truck_driver_blind_spots-1.png",
+  "explainImageAlt": "Handbook illustration: a truck with the no-zone blind spots shaded in front, behind, and along both sides"
  },
  {
   "id": "q4bcc155c",
@@ -6630,7 +6800,9 @@
   "explanation": "Set the parking brake and leave the car in park (automatic) or in gear (manual), and turn the wheels toward or away from the curb as the slope requires.",
   "source": "dmv-sample-2",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20on%20a%20Hill",
-  "sourceLabel": "Driver Handbook §6, Parking on a Hill"
+  "sourceLabel": "Driver Handbook §6, Parking on a Hill",
+  "explainImage": "handbook/parkingonahill.jpg",
+  "explainImageAlt": "Handbook illustration: Three cars parked on a hill: downhill wheels turned toward the curb, uphill wheels turned away from the curb, and with no curb wheels turned toward the road shoulder"
  },
  {
   "id": "qa557add5",
@@ -6645,7 +6817,9 @@
   "explanation": "Start the turn from the far-left lane. If the street you enter has three or more lanes in your direction, you may end the turn in any open lane.",
   "source": "dmv-sample-2",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Examples%20of%20Turns",
-  "sourceLabel": "Driver Handbook §6, Examples of Turns"
+  "sourceLabel": "Driver Handbook §6, Examples of Turns",
+  "explainImage": "handbook/left_turn_oneway_street.png",
+  "explainImageAlt": "Handbook illustration: Left turn from a one-way street onto a one-way street"
  },
  {
   "id": "qf1b3708b",
@@ -6690,7 +6864,9 @@
   "explanation": "A red curb means no stopping, standing, or parking. Buses may stop where signs allow it.",
   "source": "dmv-sample-3",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads-cont1/#:~:text=Parking%20at%20Colored%20Curbs",
-  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs"
+  "sourceLabel": "Driver Handbook §6, Parking at Colored Curbs",
+  "explainImage": "handbook/coloredcurbs.png",
+  "explainImageAlt": "Handbook illustration: Parking at Colored Curbs"
  },
  {
   "id": "qacfb2933",
@@ -6705,7 +6881,9 @@
   "explanation": "Two sets of double yellow lines two feet or more apart are a barrier. Do not drive on or over it.",
   "source": "dmv-sample-3",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Double%20Solid%20Yellow%20Lines",
-  "sourceLabel": "Driver Handbook §6, Double Solid Yellow Lines"
+  "sourceLabel": "Driver Handbook §6, Double Solid Yellow Lines",
+  "explainImage": "handbook/double_solid_yellow_lines.png",
+  "explainImageAlt": "Handbook illustration: Double Solid Yellow Lines. End Divided Road Sign and U-Turn OK Sign"
  },
  {
   "id": "qbb35d5b4",
@@ -6720,7 +6898,9 @@
   "explanation": "Merge into the bicycle lane, no more than 200 feet before the turn, once it is safe. Don't cut across a cyclist.",
   "source": "dmv-sample-3",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Right%20Turns",
-  "sourceLabel": "Driver Handbook §6, Right Turns"
+  "sourceLabel": "Driver Handbook §6, Right Turns",
+  "explainImage": "handbook/rightturn.png",
+  "explainImageAlt": "Handbook illustration: Image of a vehicle making a right turn"
  },
  {
   "id": "q07aa74ae",
@@ -6795,7 +6975,9 @@
   "explanation": "A right turn should end in the right-most lane of the street you enter.",
   "source": "dmv-sample-3",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/navigating-the-roads/#:~:text=Examples%20of%20Turns",
-  "sourceLabel": "Driver Handbook §6, Examples of Turns"
+  "sourceLabel": "Driver Handbook §6, Examples of Turns",
+  "explainImage": "handbook/right_turn_oneway_street.png",
+  "explainImageAlt": "Handbook illustration: Right turn from a one-way street onto a one-way street"
  },
  {
   "id": "q1f83d795",
@@ -6810,7 +6992,9 @@
   "explanation": "Obey a crossing guard at all times. They have the authority to direct traffic.",
   "source": "dmv-sample-3",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road-cont1/#:~:text=Around%20Children",
-  "sourceLabel": "Driver Handbook §7, Around Children"
+  "sourceLabel": "Driver Handbook §7, Around Children",
+  "explainImage": "handbook/schoolbus-loading-1.png",
+  "explainImageAlt": "Handbook illustration: School bus with red lights flashing and a crossing guard next to it, with traffic stopped"
  },
  {
   "id": "q5210a286",
@@ -6900,7 +7084,9 @@
   "explanation": "A flashing yellow light means slow down and proceed with caution. Flashing red means treat it as a stop sign.",
   "source": "dmv-sample-4",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/laws-and-rules-of-the-road/#:~:text=Flashing%20Yellow%20Light",
-  "sourceLabel": "Driver Handbook §7, Flashing Yellow Light"
+  "sourceLabel": "Driver Handbook §7, Flashing Yellow Light",
+  "image": "signs/signal-flashing-yellow.svg",
+  "imageAlt": "Traffic signal showing a flashing yellow light"
  },
  {
   "id": "q53617649",
