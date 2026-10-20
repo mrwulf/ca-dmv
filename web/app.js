@@ -378,6 +378,18 @@ function chart(exams, passPercent) {
   return svg;
 }
 
+// ---------- Signed out (shown without calling the API, which would send the user to sign in) ----------
+
+async function signedOut() {
+  show(
+    h("div", { class: "card stack center" },
+      h("h1", {}, "Signed out"),
+      h("p", { class: "muted" }, "You are signed out of CA DMV practice. Your other apps stay signed in."),
+      h("a", { class: "btn", href: "/auth/login?prompt=select_account" }, "Sign in again"),
+      h("p", { class: "muted" }, "You can pick a different account when you sign in.")),
+  );
+}
+
 // ---------- Delete a test (not linked from anywhere; add /delete to a results URL) ----------
 
 const CONFIRM_WORD = "DELETE";
@@ -491,6 +503,7 @@ function route() {
     exam: () => id && exam(id),
     results: () => id && (action === "delete" ? deleteTest(id) : results(id)),
     q: () => id && practice(id),
+    "signed-out": () => signedOut(),
     progress: () => progress(),
     flagged: () => flagged(),
   };

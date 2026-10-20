@@ -29,6 +29,8 @@ type authn struct {
 	verifier *oidc.IDTokenVerifier
 	// endSession is the provider's end_session_endpoint from discovery; empty if it has none.
 	endSession string
+	// prompts are the prompt values the provider says it supports.
+	prompts map[string]bool
 }
 
 // init discovers the provider lazily so the app starts even if the IdP is briefly down.
@@ -53,12 +55,17 @@ func (a *authn) init(ctx context.Context) (*oauth2.Config, *oidc.IDTokenVerifier
 	}
 	a.verifier = p.Verifier(&oidc.Config{ClientID: a.cfg.clientID})
 	var disc struct {
-		EndSessionEndpoint string `json:"end_session_endpoint"`
+		EndSessionEndpoint    string   `json:"end_session_endpoint"`
+		PromptValuesSupported []string `json:"prompt_values_supported"`
 	}
 	if err = p.Claims(&disc); err != nil {
 		return nil, nil, fmt.Errorf("oidc discovery claims: %w", err)
 	}
 	a.endSession = disc.EndSessionEndpoint
+	a.prompts = map[string]bool{}
+	for _, v := range disc.PromptValuesSupported {
+		a.prompts[v] = true
+	}
 	return a.oauth, a.verifier, nil
 }
 
@@ -84,7 +91,14 @@ func (a *authn) login(w http.ResponseWriter, r *http.Request) {
 	}
 	// The cookie binds the flow to this browser so a forged callback link cannot log someone in.
 	http.SetCookie(w, a.cookie(stateCookie, state, "/auth", 600))
-	http.Redirect(w, r, oc.AuthCodeURL(state, oidc.Nonce(nonce), oauth2.S256ChallengeOption(verifier)), http.StatusFound)
+	opts := []oauth2.AuthCodeOption{oidc.Nonce(nonce), oauth2.S256ChallengeOption(verifier)}
+	// After an explicit sign-out the app sends ?prompt=select_account so the provider asks which
+	// account to use instead of silently signing the same user back in. Only values the provider
+	// advertises are forwarded.
+	if p := r.URL.Query().Get("prompt"); (p == "select_account" || p == "login") && a.prompts[p] {
+		opts = append(opts, oauth2.SetAuthURLParam("prompt", p))
+	}
+	http.Redirect(w, r, oc.AuthCodeURL(state, opts...), http.StatusFound)
 }
 
 func (a *authn) callback(w http.ResponseWriter, r *http.Request) {
@@ -144,10 +158,11 @@ func (a *authn) callback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-// logout ends the local session and answers with where the browser should go next. Clearing our own
-// cookie is not enough: the provider still has the user signed in, so the next visit would log them
-// straight back in. When the provider advertises an end_session_endpoint, send the browser there
-// (OIDC RP-initiated logout), with a return address back to this app.
+// logout ends the local session and answers with where the browser should go next. By default that
+// is the app's own signed-out screen: the provider session stays, so the user's other apps stay
+// signed in, and signing back in goes through the provider's account chooser. With
+// OIDC_LOGOUT_PROVIDER set, the browser is also sent to the provider's end_session_endpoint (OIDC
+// RP-initiated logout), which ends the provider session for every app.
 func (a *authn) logout(w http.ResponseWriter, r *http.Request) {
 	var idToken string
 	if c, err := r.Cookie(sessionCookie); err == nil {
@@ -156,7 +171,11 @@ func (a *authn) logout(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	http.SetCookie(w, a.cookie(sessionCookie, "", "/", -1))
-	writeJSON(w, http.StatusOK, map[string]string{"redirect": a.providerLogoutURL(r.Context(), idToken)})
+	next := "/#/signed-out"
+	if a.cfg.logoutProvider {
+		next = a.providerLogoutURL(r.Context(), idToken)
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"redirect": next})
 }
 
 func (a *authn) providerLogoutURL(ctx context.Context, idToken string) string {

@@ -24,9 +24,12 @@ All settings are environment variables.
 | `OIDC_CLIENT_SECRET` | no | | Leave empty for a public client (PKCE is always used) |
 | `DB_PATH` | no | `/data/ca-dmv.db` | Needs a writable directory (SQLite WAL) |
 | `LISTEN_ADDR` | no | `:8080` | |
+| `OIDC_LOGOUT_PROVIDER` | no | `false` | Set to `true` to also end the provider session on sign-out (see below) |
 | `FULL_EXAM_LENGTH` | no | `36` | Questions in the full practice exam. The DMV does not currently publish the real test's length, so adjust to taste |
 
-In the provider, register the redirect URI `${BASE_URL}/auth/callback`, the post-logout redirect URI `${BASE_URL}/`, and the scopes `openid profile email`. Signing out ends the app's session and then sends the browser to the provider's `end_session_endpoint` (found through discovery) with the ID token, so the provider session ends too; without that the provider would sign the user straight back in. A provider with no `end_session_endpoint` just gets a local sign-out. Access control is whatever your provider enforces (for Pocket ID, restrict the client to a user group); the app has no roles.
+In the provider, register the redirect URI `${BASE_URL}/auth/callback` and the scopes `openid profile email`. Access control is whatever your provider enforces (for Pocket ID, restrict the client to a user group); the app has no roles.
+
+**Signing out** ends only this app's session and shows a signed-out screen. The provider session stays, so the user's other apps stay signed in. The "Sign in again" button asks the provider for `prompt=select_account` (when it advertises that value), so the provider asks which account to use and a different user can sign in on the same phone. To also end the provider session, which signs the user out of every app that uses it, set `OIDC_LOGOUT_PROVIDER=true` and register `${BASE_URL}/` as a post-logout redirect URI; the browser is then sent to the provider's `end_session_endpoint` (found through discovery) with the ID token.
 
 ## Run
 

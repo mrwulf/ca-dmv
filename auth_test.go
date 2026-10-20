@@ -25,8 +25,11 @@ type fakeIdP struct {
 	clientID  string
 	nonce     string
 	challenge string
-	// noEndSession omits end_session_endpoint from discovery.
+	// noEndSession omits end_session_endpoint from discovery; noPrompts omits prompt_values_supported.
 	noEndSession bool
+	noPrompts    bool
+	// prompt is the prompt parameter the last authorization request carried.
+	prompt string
 }
 
 func newFakeIdP(t *testing.T, clientID string) *fakeIdP {
@@ -45,6 +48,9 @@ func newFakeIdP(t *testing.T, clientID string) *fakeIdP {
 		if !f.noEndSession {
 			doc["end_session_endpoint"] = f.srv.URL + "/endsession"
 		}
+		if !f.noPrompts {
+			doc["prompt_values_supported"] = []string{"none", "login", "consent", "select_account"}
+		}
 		json.NewEncoder(w).Encode(doc)
 	})
 	mux.HandleFunc("/jwks", func(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +62,7 @@ func newFakeIdP(t *testing.T, clientID string) *fakeIdP {
 			http.Error(w, "bad authorize request", http.StatusBadRequest)
 			return
 		}
-		f.nonce, f.challenge = q.Get("nonce"), q.Get("code_challenge")
+		f.nonce, f.challenge, f.prompt = q.Get("nonce"), q.Get("code_challenge"), q.Get("prompt")
 		http.Redirect(w, r, q.Get("redirect_uri")+"?code=abc&state="+url.QueryEscape(q.Get("state")), http.StatusFound)
 	})
 	mux.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
@@ -148,8 +154,8 @@ func TestCallbackRejectsForeignState(t *testing.T) {
 	}
 }
 
-// loginAndLogout signs in through the fake IdP and returns the JSON the logout endpoint answers with.
-func loginAndLogout(t *testing.T, idp *fakeIdP) (appURL string, redirect string, client *http.Client) {
+// authApp starts the app against the fake IdP, with tweak applied to its config.
+func authApp(t *testing.T, idp *fakeIdP, tweak func(*config)) (appURL string, client *http.Client) {
 	t.Helper()
 	st, err := openStore(filepath.Join(t.TempDir(), "t.db"))
 	if err != nil {
@@ -159,31 +165,51 @@ func loginAndLogout(t *testing.T, idp *fakeIdP) (appURL string, redirect string,
 	app := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { handler.ServeHTTP(w, r) }))
 	t.Cleanup(app.Close)
 	cfg := config{issuer: idp.srv.URL, clientID: "cid", baseURL: app.URL}
+	if tweak != nil {
+		tweak(&cfg)
+	}
 	s := &server{cfg: cfg, st: st, auth: &authn{cfg: cfg, st: st}}
 	handler = s.routes()
-
 	jar, _ := cookiejar.New(nil)
-	client = &http.Client{Jar: jar}
-	if res, err := client.Get(app.URL + "/auth/login"); err != nil || res.StatusCode != http.StatusOK {
+	return app.URL, &http.Client{Jar: jar}
+}
+
+// loginAndLogout signs in through the fake IdP and returns the redirect the logout endpoint answers with.
+func loginAndLogout(t *testing.T, idp *fakeIdP, tweak func(*config)) (appURL, redirect string, client *http.Client) {
+	t.Helper()
+	appURL, client = authApp(t, idp, tweak)
+	if res, err := client.Get(appURL + "/auth/login"); err != nil || res.StatusCode != http.StatusOK {
 		t.Fatalf("login: %v %v", err, res)
 	}
-	req, _ := http.NewRequest("POST", app.URL+"/auth/logout", nil)
-	req.Header.Set("Origin", app.URL)
+	req, _ := http.NewRequest("POST", appURL+"/auth/logout", nil)
+	req.Header.Set("Origin", appURL)
 	res, err := client.Do(req)
 	if err != nil || res.StatusCode != http.StatusOK {
 		t.Fatalf("logout: %v %v", err, res)
 	}
 	var body struct{ Redirect string }
 	json.NewDecoder(res.Body).Decode(&body)
-	return app.URL, body.Redirect, client
+	return appURL, body.Redirect, client
 }
 
-// Logout must send the browser to the provider's end_session_endpoint with the ID token, or the
-// provider keeps the user signed in and logs them straight back in.
-func TestLogoutUsesProviderEndSession(t *testing.T) {
+// By default signing out ends only this app's session: the provider session stays, so the user's
+// other apps stay signed in.
+func TestLogoutIsLocalByDefault(t *testing.T) {
 	idp := newFakeIdP(t, "cid")
-	appURL, redirect, client := loginAndLogout(t, idp)
+	appURL, redirect, client := loginAndLogout(t, idp, nil)
+	if redirect != "/#/signed-out" {
+		t.Fatalf("redirect = %q, want the app's signed-out screen", redirect)
+	}
+	if res, _ := client.Get(appURL + "/api/me"); res.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("after logout /api/me = %d", res.StatusCode)
+	}
+}
 
+// With OIDC_LOGOUT_PROVIDER the browser is also sent to the provider's end_session_endpoint with
+// the ID token.
+func TestLogoutCanEndProviderSession(t *testing.T) {
+	idp := newFakeIdP(t, "cid")
+	appURL, redirect, _ := loginAndLogout(t, idp, func(c *config) { c.logoutProvider = true })
 	u, err := url.Parse(redirect)
 	if err != nil || u.Scheme+"://"+u.Host != idp.srv.URL || u.Path != "/endsession" {
 		t.Fatalf("redirect = %q, want the IdP end_session_endpoint", redirect)
@@ -192,17 +218,42 @@ func TestLogoutUsesProviderEndSession(t *testing.T) {
 	if q.Get("client_id") != "cid" || q.Get("post_logout_redirect_uri") != appURL+"/" || q.Get("id_token_hint") == "" {
 		t.Fatalf("end_session query = %v", q)
 	}
-	// The local session is gone too.
-	if res, _ := client.Get(appURL + "/api/me"); res.StatusCode != http.StatusUnauthorized {
-		t.Fatalf("after logout /api/me = %d", res.StatusCode)
+}
+
+func TestProviderLogoutWithoutEndSessionEndpoint(t *testing.T) {
+	idp := newFakeIdP(t, "cid")
+	idp.noEndSession = true
+	_, redirect, _ := loginAndLogout(t, idp, func(c *config) { c.logoutProvider = true })
+	if redirect != "/" {
+		t.Fatalf("redirect = %q, want /", redirect)
 	}
 }
 
-func TestLogoutWithoutEndSessionEndpoint(t *testing.T) {
-	idp := newFakeIdP(t, "cid")
-	idp.noEndSession = true
-	_, redirect, _ := loginAndLogout(t, idp)
-	if redirect != "/" {
-		t.Fatalf("redirect = %q, want /", redirect)
+// After sign-out the app asks the provider to choose an account, but only for values the provider
+// supports and the app allows.
+func TestLoginForwardsPrompt(t *testing.T) {
+	cases := []struct {
+		name, query, want string
+		noPrompts         bool
+	}{
+		{"select_account", "?prompt=select_account", "select_account", false},
+		{"login", "?prompt=login", "login", false},
+		{"none is not forwarded", "?prompt=none", "", false},
+		{"unknown value", "?prompt=bogus", "", false},
+		{"no prompt", "", "", false},
+		{"provider lacks support", "?prompt=select_account", "", true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			idp := newFakeIdP(t, "cid")
+			idp.noPrompts = c.noPrompts
+			appURL, client := authApp(t, idp, nil)
+			if res, err := client.Get(appURL + "/auth/login" + c.query); err != nil || res.StatusCode != http.StatusOK {
+				t.Fatalf("login: %v %v", err, res)
+			}
+			if idp.prompt != c.want {
+				t.Fatalf("provider saw prompt=%q, want %q", idp.prompt, c.want)
+			}
+		})
 	}
 }

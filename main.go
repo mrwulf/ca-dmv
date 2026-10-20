@@ -71,6 +71,8 @@ type config struct {
 	clientID     string
 	clientSecret string
 	fullLength   int
+	// logoutProvider also ends the identity provider's session on sign-out.
+	logoutProvider bool
 }
 
 func loadConfig() (config, error) {
@@ -82,6 +84,8 @@ func loadConfig() (config, error) {
 		clientID:     os.Getenv("OIDC_CLIENT_ID"),
 		clientSecret: os.Getenv("OIDC_CLIENT_SECRET"), // optional: leave empty for a public PKCE client
 		fullLength:   defaultFullExamLength,
+
+		logoutProvider: os.Getenv("OIDC_LOGOUT_PROVIDER") == "true",
 	}
 	if v := os.Getenv("FULL_EXAM_LENGTH"); v != "" {
 		n, err := strconv.Atoi(v)
