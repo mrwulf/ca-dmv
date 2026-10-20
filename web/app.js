@@ -18,6 +18,11 @@ const topicName = (t) => TOPICS[t] || t;
 
 const app = document.getElementById("app");
 
+// Sign images were once cached for 24 hours under fixed names. The server now revalidates them with
+// ETags, but this query string makes every device fetch the revised artwork once, right away.
+const SIGNS_REV = "2";
+const signSrc = (image) => `/${image}?v=${SIGNS_REV}`;
+
 function h(tag, props, ...kids) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(props || {})) {
@@ -317,6 +322,8 @@ async function home() {
       h("a", { class: "btn secondary", href: "#/progress" }, "See progress over time"),
       h("a", { class: "btn secondary", href: "#/flagged" }, `Flagged questions (${me.flag_count})`)),
     h("p", { class: "footer muted center" }, [me.version, me.commit].filter(Boolean).join(" · ")),
+    h("p", { class: "footer muted center" }, "Hand-signal pictures: California Driver's Handbook, California Department of Motor Vehicles, licensed under ",
+      h("a", { href: "https://creativecommons.org/licenses/by-nc/4.0/", target: "_blank", rel: "noopener noreferrer" }, "CC BY-NC 4.0"), "."),
   );
 }
 
@@ -396,7 +403,7 @@ function drawQuestion(view, pos, answered, onNext) {
       h("span", { class: "muted" }, streak >= 3 ? `${view.correct} correct so far · 🔥 ${streak} in a row` : `${view.correct} correct so far`)),
     bar((100 * done) / view.total),
     h("div", { class: "meta" }, h("span", {}, `Question ${pos + 1} of ${view.total}`), h("span", {}, topicName(q.topic))),
-    q.image && h("img", { class: "sign", src: `/${q.image}`, alt: q.image_alt || "Road sign or marking" }),
+    q.image && h("img", { class: "sign", src: signSrc(q.image), alt: q.image_alt || "Road sign or marking" }),
     h("p", { class: "q" }, q.text),
     buttons,
     answered && h("div", { class: `feedback ${right ? "right" : "wrong"}`, role: "status" },
@@ -623,7 +630,7 @@ async function practice(id) {
     show(
       h("div", { class: "topbar" }, navButton("← Back", () => history.back()), homeLink()),
       h("div", { class: "meta" }, h("span", {}, "Practice one question"), h("span", {}, topicName(q.topic))),
-      q.image && h("img", { class: "sign", src: `/${q.image}`, alt: q.image_alt || "Road sign or marking" }),
+      q.image && h("img", { class: "sign", src: signSrc(q.image), alt: q.image_alt || "Road sign or marking" }),
       h("p", { class: "q" }, q.text),
       buttons,
       res && h("div", { class: `feedback ${res.correct ? "right" : "wrong"}`, role: "status" },

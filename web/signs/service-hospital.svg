@@ -1,5 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Blue square motorist service sign with a white H for hospital">
-  <rect x="6" y="6" width="188" height="188" rx="4" fill="#0846a6" stroke="#000000" stroke-width="3"/>
-  <rect x="14" y="14" width="172" height="172" fill="none" stroke="#ffffff" stroke-width="3"/>
-  <text x="100" y="148" text-anchor="middle" font-family="Arial Black, Helvetica, sans-serif" font-size="140" font-weight="900" fill="#ffffff">H</text>
+<svg id="D9-2" xmlns="http://www.w3.org/2000/svg" width="30in" height="30in" viewBox="0 0 2160 2160">
+  <g>
+    <rect width="2160" height="2160" rx="135" ry="135" style="fill:#fff"/>
+    <path d="M2025,2.2536c35.4578,0,68.7932,13.8081,93.8657,38.8806,25.0725,25.0725,38.8806,58.4081,38.8806,93.8658v1890c0,35.4578-13.8081,68.7932-38.8806,93.8657s-58.408,38.8806-93.8657,38.8806H135c-35.4578,0-68.7933-13.8081-93.8658-38.8806-25.0725-25.0725-38.8806-58.408-38.8806-93.8657V135c0-35.4578,13.8081-68.7933,38.8806-93.8658C66.2067,16.0617,99.5422,2.2536,135,2.2536h1890ZM2025,0H135C60.4417,0,0,60.4417,0,135v1890c0,74.5583,60.4417,135,135,135h1890c74.5583,0,135-60.4417,135-135V135c0-74.5583-60.4417-135-135-135h0Z"/>
+  </g>
+  <rect x="54" y="54" width="2052" height="2052" rx="81" ry="81" style="fill:#003f87"/>
+  <path id="H" d="M1450.7046,1980v-789.8519h-741.4092v789.8519h-353.3865V180h353.3865v650.148h741.4092V180h353.3864v1800h-353.3864Z" style="fill:#fff"/>
 </svg>

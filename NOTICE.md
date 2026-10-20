@@ -9,6 +9,16 @@ The question bank in `questions/questions.json` and the images in `web/signs/` c
 
 Both are used under the MIT License. Each copyright notice and permission notice is available at the linked repository's `LICENSE` file.
 
+## Sign images
+
+Most sign images in `web/signs/` are the official US Manual on Uniform Traffic Control Devices (MUTCD) artwork, public domain as a US government work, taken from Wikimedia Commons. Commons file titles: `MUTCD R1-1` (stop), `R1-2` (yield), `R3-4` (no U-turn), `R4-3` (slower traffic keep right), `R5-1` (do not enter), `D9-2` (hospital), `Mile Marker 4`, `Speed Limit 25 sign`, `Speed Limit 65 sign`, `MUTCD CW20-1` (road work), `Ped Signal - Steady hand` (pedestrian signal), `W10-1` (railroad crossing), `S1-1` (school), `W11-3` (deer), `W4-2R` (lane ends), `W8-5` (slippery when wet), `W6-3` (two-way traffic), `W1-5R` (winding road), and `W1-2R` (curve). Where a file had no `viewBox`, one was added so it scales. California's signs follow the same symbols, but small details can differ from the MUTCD versions.
+
+The hand-signal pictures and the two-way left-turn lane diagram were drawn for this project (MIT, like the code). The curb, lane-marking, traffic-signal, lane-control, park, and freeway guide pictures come from the MIT-licensed bank above; captions that gave away the answer were removed.
+
+## Driver Handbook illustrations
+
+The three hand-signal pictures (`web/signs/hand-signal-*.png`) are from the California Driver's Handbook. The handbook states: "This publication is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License." Credit line required by the DMV: **California Driver's Handbook, California Department of Motor Vehicles, licensed under CC BY-NC 4.0.** That license allows copying and adapting with credit for non-commercial use only, and the DMV states that commercial use needs its prior written permission. This app is free and non-commercial; if that ever changes, remove or replace this material first.
+
 ## California DMV sample tests
 
 Question and answer-option text for the questions with source `dmv-sample-1` to `dmv-sample-4` comes from the California Department of Motor Vehicles' published

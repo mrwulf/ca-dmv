@@ -98,4 +98,4 @@ The home screen footer shows the release tag and short git SHA. The image build 
 
 ## License
 
-MIT for the code. Question content has its own terms, see [NOTICE.md](NOTICE.md).
+MIT for the code. Question content and some images have their own terms, see [NOTICE.md](NOTICE.md). The hand-signal pictures are CC BY-NC 4.0 from the California Driver's Handbook, so this project is for non-commercial use.

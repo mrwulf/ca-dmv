@@ -14,6 +14,10 @@ The app does not need to stay current; refresh only when the DMV handbook change
 Not used: GitHub repos with no license (all rights reserved), driving-tests.org, Quizlet.
 Check a new repo's `license` field with `gh api repos/OWNER/REPO --jq .license.spdx_id` before importing; `null` means do not copy.
 
+## Sign images
+
+`web/signs/` holds the pictures some questions point at. Prefer official public-domain MUTCD artwork from Wikimedia Commons (`https://commons.wikimedia.org/`, file titles like `MUTCD W8-5.svg`); check each file's license is "Public domain", that it has a `viewBox`, and that it has no scripts or external references. `TestSignImages` enforces the last two. The DMV's Driver Handbook illustrations are CC BY-NC 4.0: reuse is allowed for non-commercial use with the credit line in `NOTICE.md`, and the app shows that credit on the home screen. Pictures must not contain a caption that gives away the answer. When a sign file changes in place, bump `SIGNS_REV` in `web/app.js` once; the server already revalidates files with ETags, but devices that cached the old file need one URL change.
+
 ## Handbook sources
 
 Each question links to the Driver Handbook section that supports its answer (shown in the "Think this is wrong?" expander and under the explanation). `questions/sources.json` maps question id to `{page, num, heading[, fragment]}`; `merge-questions.ts` turns it into a link with a text fragment (`#:~:text=`) that highlights the heading in browsers that support it. About 89% of questions have a source. The rest have no supporting text in the handbook (for example sign colors and shapes, which the handbook shows only as pictures) and the app says so.

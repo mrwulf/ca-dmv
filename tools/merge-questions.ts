@@ -160,6 +160,22 @@ for (const c of CORRECTIONS) {
   q.explanation = c.explanation;
 }
 
+// Sign images replaced with official MUTCD artwork (see NOTICE.md); alt text updated where the picture changed.
+const IMAGE_ALT: Record<string, string> = {
+  "signs/construction.svg": "Orange diamond sign reading ROAD WORK 1000 FT",
+};
+for (const q of all) if (q.image && IMAGE_ALT[q.image]) q.imageAlt = IMAGE_ALT[q.image];
+
+// The handbook's own hand-signal illustrations (PNG) replace the SVG drawings in the MIT bank.
+for (const q of all) if (q.image && /^signs\/hand-signal-.*\.svg$/.test(q.image)) q.image = q.image.replace(/\.svg$/, ".png");
+
+// "To signal a left turn ... you should:" names the signal and offers arm positions, so a picture of
+// the arm would give the answer away. Those questions are text only.
+for (const q of all) if (q.image && /^signs\/hand-signal-/.test(q.image) && /^To signal/.test(q.question)) {
+  delete q.image;
+  delete q.imageAlt;
+}
+
 // De-duplicate: drop a question if its normalized text matches an earlier one, or its first
 // 60 normalized characters plus the correct answer match. Prefer entries with images, then ones with a source link.
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, " ").trim();

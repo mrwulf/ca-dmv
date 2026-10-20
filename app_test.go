@@ -734,3 +734,62 @@ func TestMasteryAsOfOrdering(t *testing.T) {
 		t.Fatalf("other user read it: %v", err)
 	}
 }
+
+// Every sign image a question points at must ship with the app and must be plain, safe SVG.
+func TestSignImages(t *testing.T) {
+	bank, _ := loadBank(questionsJSON)
+	seen := map[string]bool{}
+	for _, q := range bank {
+		if q.Image == "" || seen[q.Image] {
+			continue
+		}
+		seen[q.Image] = true
+		raw, err := webFS.ReadFile("web/" + q.Image)
+		if err != nil {
+			t.Errorf("%s: %v", q.Image, err)
+			continue
+		}
+		if strings.HasSuffix(q.Image, ".png") {
+			if !strings.HasPrefix(string(raw), "\x89PNG") {
+				t.Errorf("%s: not a PNG", q.Image)
+			}
+			continue
+		}
+		svg := strings.ToLower(string(raw))
+		if !strings.Contains(svg, "<svg") || !strings.Contains(svg, "viewbox") {
+			t.Errorf("%s: not an SVG with a viewBox", q.Image)
+		}
+		for _, bad := range []string{"<script", "foreignobject", "onload=", "href=\"http", "href='http"} {
+			if strings.Contains(svg, bad) {
+				t.Errorf("%s: contains %q", q.Image, bad)
+			}
+		}
+		if q.ImageAlt == "" {
+			t.Errorf("%s: question %s has no image alt text", q.Image, q.ID)
+		}
+	}
+	if len(seen) == 0 {
+		t.Fatal("no sign images found")
+	}
+}
+
+// Sign images keep their file names between releases, so browsers must revalidate them instead of
+// caching them for a day, and an unchanged file must answer 304.
+func TestStaticFilesRevalidate(t *testing.T) {
+	h := (&server{cfg: config{baseURL: "http://localhost"}}).routes()
+	for _, p := range []string{"/", "/app.js", "/signs/stop.svg"} {
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, httptest.NewRequest("GET", p, nil))
+		etag := w.Header().Get("ETag")
+		if w.Code != 200 || etag == "" || w.Header().Get("Cache-Control") != "no-cache" {
+			t.Fatalf("%s: code=%d etag=%q cache-control=%q", p, w.Code, etag, w.Header().Get("Cache-Control"))
+		}
+		r := httptest.NewRequest("GET", p, nil)
+		r.Header.Set("If-None-Match", etag)
+		w = httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if w.Code != http.StatusNotModified {
+			t.Fatalf("%s with a matching ETag = %d, want 304", p, w.Code)
+		}
+	}
+}

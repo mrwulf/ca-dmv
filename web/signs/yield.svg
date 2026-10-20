@@ -1,5 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Downward-pointing triangular YIELD sign">
-  <polygon points="10,30 190,30 100,185" fill="#c8102e" stroke="#ffffff" stroke-width="2"/>
-  <polygon points="28,42 172,42 100,166" fill="#ffffff" stroke="#c8102e" stroke-width="2"/>
-  <text x="100" y="98" text-anchor="middle" font-family="Arial Black, Helvetica, sans-serif" font-size="32" font-weight="900" fill="#c8102e" letter-spacing="2">YIELD</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="33.078in" height="29.177in" viewBox="0 0 2381.6 2100.7" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <style>
+	.a {
+		fill: #fff;
+	}
+
+	.b {
+		fill: #af1e2d;
+	}
+  </style>
+</defs>
+  <path class="a" transform="translate(-.0013 1e-4)" d="m1315.5 2028.7 1046.6-1812.7c55.426-96-13.856-216-124.71-216h-2093.2c-110.85 0-180.13 120-124.71 216l1046.6 1812.7c55.426 96 193.99 96 249.42 0z"/>
+  <path transform="translate(-.0013 1e-4)" d="m2237.4 2.2536c51.244 0 97.134 26.494 122.76 70.873s25.622 97.368 0 141.75l-1046.6 1812.7c-25.622 44.379-71.512 70.873-122.76 70.873s-97.134-26.494-122.76-70.873l-1046.6-1812.7c-25.622-44.378-25.622-97.368 0-141.75s71.512-70.873 122.76-70.873h2093.2m0-2.2537h-2093.2c-110.85 1e-4 -180.13 120-124.71 216l1046.6 1812.7c27.713 48 76.21 72 124.71 72s96.995-24 124.71-72l1046.6-1812.7c55.426-96-13.856-216-124.71-216z"/>
+  <path class="b" transform="translate(-.0013 1e-4)" d="m1190.8 2046.7a89.084 89.084 0 0 1-77.942-45l-1046.6-1812.7a90 90 0 0 1 77.942-135h2093.2a90 90 0 0 1 77.942 135l-1046.6 1812.7a89.082 89.082 0 0 1-77.942 45z"/>
+  <path class="a" transform="translate(-.0013 1e-4)" d="m767.75 414h846.09c69.282 0 112.58 75 77.942 135l-423.05 732.74c-34.641 60-121.24 60-155.88 0l-423.05-732.74c-34.641-60 8.6603-135 77.942-135z"/>
+  <g id="YIELD">
+    <path class="b" transform="translate(-.0013 1e-4)" d="m937.1 773h-30.929v-97.548l-52.878-117.46h32.924l35.918 77.64 35.917-77.64h32.924l-53.876 117.46z"/>
+    <path class="b" transform="translate(-.0013 1e-4)" d="m1020.9 559h29.931v215h-29.931z"/>
+    <path class="b" transform="translate(-.0013 1e-4)" d="m1098.7 559h101.77v29.862h-70.837v54.746h44.897v29.862h-44.897v70.673h78.819v29.862h-109.75z"/>
+    <path class="b" transform="translate(-.0013 1e-4)" d="m1245.4 559h30.929v186.14h78.819v28.866h-109.75z"/>
+    <path class="b" transform="translate(-.0013 1e-4)" d="m1385.1 773v-214.01h61.858c12.97 0 58.865 0.9954 58.865 107.5 0 97.548-42.901 107.5-56.869 107.5h-63.853zm55.872-184.15h-23.945v154.29h21.95c24.943 0 37.913-10.949 37.913-76.645-0.9977-74.654-19.954-77.64-35.918-77.64z"/>
+  </g>
 </svg>

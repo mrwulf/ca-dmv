@@ -1,6 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 200" role="img" aria-label="Small green roadside mile-marker post showing a number">
-  <rect x="6" y="40" width="108" height="120" rx="4" fill="#0a6a3a" stroke="#000000" stroke-width="3"/>
-  <rect x="14" y="48" width="92" height="104" fill="none" stroke="#ffffff" stroke-width="2"/>
-  <text x="60" y="86" text-anchor="middle" font-family="Arial Black, Helvetica, sans-serif" font-size="18" font-weight="900" fill="#ffffff">MILE</text>
-  <text x="60" y="138" text-anchor="middle" font-family="Arial Black, Helvetica, sans-serif" font-size="48" font-weight="900" fill="#ffffff">42</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg width="10in" height="18in" version="1.1" viewBox="0 0 254 457.4" xmlns="http://www.w3.org/2000/svg">
+ <g transform="translate(-34.27,-5.387)">
+  <rect x="40.57" y="11.74" width="241.4" height="444.7" rx="38.12" ry="38.12" fill="#006b54" stroke="#f6f6f6" stroke-width="12.706" style="paint-order:markers fill stroke"/>
+  <path d="m211 348.6v-21.9h-14.5v-92.6h-24l-75.46 100.1v14.4h75.46v38h24v-38zm-38.5-21.9h-43.4l43.4-57.3z" fill="#f6f6f6" stroke-width="855.95" style="paint-order:markers fill stroke" aria-label="4"/>
+  <path d="m100.1 183.3h12.7v-101.64h-12.7l-12.4 36.04-12.35-36.04h-12.7v101.64h12.7v-60.4l12.35 38.5 12.4-38.5zm34.4 0h12.7v-101.64h-12.7zm34.5 0h38.8v-12h-26.1v-89.64h-12.7zm52.1 0h38.8v-13.1h-26.1v-36h16.2v-13.4h-16.2v-26.09h24.7v-13.05h-37.4z" fill="#f6f6f6" stroke-width="564.69" style="paint-order:markers fill stroke" aria-label="MILE"/>
+ </g>
 </svg>

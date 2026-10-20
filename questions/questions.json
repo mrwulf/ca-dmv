@@ -173,7 +173,7 @@
   "explanation": "Orange signs indicate construction, maintenance, or temporary traffic control. Workers may be present and conditions may change frequently.",
   "source": "dmv-knowledge-test-ca",
   "image": "signs/construction.svg",
-  "imageAlt": "Orange diamond warning sign with a worker silhouette"
+  "imageAlt": "Orange diamond sign reading ROAD WORK 1000 FT"
  },
  {
   "id": "q9f4603e7",
@@ -640,8 +640,6 @@
   "answer": 0,
   "explanation": "Left turn = left arm extended straight out the window.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/hand-signal-left.svg",
-  "imageAlt": "Driver with the left arm extended straight out the window (left turn)",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/introduction-to-driving/#:~:text=Signaling",
   "sourceLabel": "Driver Handbook §5, Signaling"
  },
@@ -658,8 +656,6 @@
   "answer": 1,
   "explanation": "Right turn = left arm bent upward at the elbow, hand pointing up.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/hand-signal-right.svg",
-  "imageAlt": "Driver with the left arm bent upward at the elbow, hand pointing up (right turn)",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/introduction-to-driving/#:~:text=Signaling",
   "sourceLabel": "Driver Handbook §5, Signaling"
  },
@@ -676,8 +672,6 @@
   "answer": 2,
   "explanation": "Stop or slow = left arm bent downward at the elbow, hand pointing down.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/hand-signal-stop.svg",
-  "imageAlt": "Driver with the left arm bent downward at the elbow, hand pointing down (stop or slow)",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/introduction-to-driving/#:~:text=Signaling",
   "sourceLabel": "Driver Handbook §5, Signaling"
  },
@@ -785,7 +779,7 @@
   "explanation": "Orange diamond signs indicate construction or maintenance. Slow down, watch for workers, and obey any temporary signs.",
   "source": "dmv-knowledge-test-ca",
   "image": "signs/construction.svg",
-  "imageAlt": "Orange diamond sign with a worker silhouette"
+  "imageAlt": "Orange diamond sign reading ROAD WORK 1000 FT"
  },
  {
   "id": "qb884b38f",
@@ -816,7 +810,7 @@
   "answer": 0,
   "explanation": "Left arm extended straight out the window = signaling a left turn.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/hand-signal-left.svg",
+  "image": "signs/hand-signal-left.png",
   "imageAlt": "Driver with the left arm extended straight out the window",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/introduction-to-driving/#:~:text=Signaling",
   "sourceLabel": "Driver Handbook §5, Signaling"
@@ -972,7 +966,7 @@
   "answer": 1,
   "explanation": "Left arm bent upward at the elbow with hand pointing up = right turn.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/hand-signal-right.svg",
+  "image": "signs/hand-signal-right.png",
   "imageAlt": "Driver with the left arm bent upward at the elbow, hand pointing up",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/introduction-to-driving/#:~:text=Signaling",
   "sourceLabel": "Driver Handbook §5, Signaling"
@@ -990,7 +984,7 @@
   "answer": 2,
   "explanation": "Left arm bent downward at the elbow with hand pointing down = stop or slow.",
   "source": "dmv-knowledge-test-ca",
-  "image": "signs/hand-signal-stop.svg",
+  "image": "signs/hand-signal-stop.png",
   "imageAlt": "Driver with the left arm bent downward at the elbow, hand pointing down",
   "sourceUrl": "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/introduction-to-driving/#:~:text=Signaling",
   "sourceLabel": "Driver Handbook §5, Signaling"

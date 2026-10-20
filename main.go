@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"embed"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"path"
 	"runtime/debug"
 	"slices"
 	"strconv"
@@ -208,15 +211,7 @@ func (s *server) routes() http.Handler {
 	mux.Handle("DELETE /api/flags/{id}", s.api(s.deleteFlag))
 
 	web, _ := fs.Sub(webFS, "web")
-	files := http.FileServerFS(web)
-	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, "/signs/") {
-			w.Header().Set("Cache-Control", "public, max-age=86400")
-		} else {
-			w.Header().Set("Cache-Control", "no-cache")
-		}
-		files.ServeHTTP(w, r)
-	}))
+	mux.Handle("/", staticHandler(web))
 	return securityHeaders(mux)
 }
 
@@ -607,4 +602,33 @@ func (s *server) deleteFlag(w http.ResponseWriter, r *http.Request, u user) erro
 	}
 	w.WriteHeader(http.StatusNoContent)
 	return nil
+}
+
+// staticHandler serves the embedded web files. Browsers revalidate on every request using a
+// content-hash ETag, so a release that changes a file (sign images keep their names) reaches
+// users immediately, and a file that did not change costs only a 304.
+func staticHandler(fsys fs.FS) http.Handler {
+	etags := map[string]string{}
+	fs.WalkDir(fsys, ".", func(p string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return nil
+		}
+		if b, err := fs.ReadFile(fsys, p); err == nil {
+			sum := sha256.Sum256(b)
+			etags[p] = `"` + hex.EncodeToString(sum[:8]) + `"`
+		}
+		return nil
+	})
+	files := http.FileServerFS(fsys)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		name := strings.TrimPrefix(path.Clean("/"+r.URL.Path), "/")
+		if name == "" {
+			name = "index.html"
+		}
+		if tag, ok := etags[name]; ok {
+			w.Header().Set("ETag", tag)
+		}
+		w.Header().Set("Cache-Control", "no-cache")
+		files.ServeHTTP(w, r)
+	})
 }

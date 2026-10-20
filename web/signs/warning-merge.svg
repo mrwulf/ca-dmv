@@ -1,9 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Yellow diamond warning sign showing the right lane ending and merging left">
-  <polygon points="100,10 190,100 100,190 10,100" fill="#fcc233" stroke="#000000" stroke-width="5"/>
-  <polygon points="100,22 178,100 100,178 22,100" fill="none" stroke="#000000" stroke-width="2"/>
-  <!-- Through arrow (left lane, straight) -->
-  <path d="M 80 160 L 80 60" stroke="#000000" stroke-width="10" fill="none" stroke-linecap="round"/>
-  <polygon points="68,68 80,46 92,68" fill="#000000"/>
-  <!-- Merging arrow (right lane, curving left) -->
-  <path d="M 120 160 L 120 100 Q 120 78 100 78" stroke="#000000" stroke-width="10" fill="none" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="90" height="89.992" viewBox="0 0 254 253.978">
+    <path d="M118.773 250.564 3.433 135.227C1.266 133.06 0 130.062 0 126.993c0-3.076 1.266-6.068 3.433-8.244L118.773 3.41a11.652 11.652 0 0 1 16.475 0L250.596 118.75c2.159 2.162 3.404 5.189 3.404 8.244 0 3.051-1.245 6.075-3.404 8.234L135.248 250.564c-2.794 2.798-7 3.997-10.851 3.143-2.269-.518-3.846-1.704-5.624-3.143" style="fill:#fcd116;fill-opacity:1;fill-rule:nonzero;stroke:none"/>
+    <path d="m133.18 248.518 115.363-115.362c1.605-1.605 2.533-3.884 2.533-6.163 0-2.272-.928-4.583-2.533-6.188L133.18 5.457a8.756 8.756 0 0 0-6.16-2.53c-2.31 0-4.568.91-6.198 2.53L5.486 120.805a8.84 8.84 0 0 0-2.554 6.188c0 2.293.934 4.543 2.554 6.163l115.337 115.362c1.616 1.605 3.923 2.529 6.198 2.529 2.269 0 4.548-.924 6.16-2.53" style="fill:#000;fill-opacity:1;fill-rule:evenodd;stroke:none"/>
+    <path d="M129.756 245.073a4.034 4.034 0 0 1-2.745 1.129 3.941 3.941 0 0 1-2.737-1.129L8.915 129.733c-.73-.72-1.114-1.726-1.114-2.738 0-1.027.384-2.022 1.114-2.745L124.274 8.913a3.902 3.902 0 0 1 2.737-1.136c1.002 0 2.036.423 2.745 1.136L245.09 124.25a3.937 3.937 0 0 1 1.14 2.745 3.832 3.832 0 0 1-1.14 2.737L129.756 245.073z" style="fill:#fcd116;fill-opacity:1;fill-rule:evenodd;stroke:none"/>
+    <path d="M79.722 188.289h19.403V66.909H79.722v121.38zM133.401 66.907v36.336s16.778 20.395 20.285 24.66v60.385h19.403v-67.339s-16.775-20.394-20.285-24.659V66.907h-19.403zM140.59 188.289h-7.19v-12.683h7.19v12.683zM140.59 166.73h-7.19v-12.678h7.19v12.678z" style="fill:#000;fill-opacity:1;fill-rule:nonzero;stroke:none"/>
+    <path d="M140.59 145.176h-7.19v-12.68h7.19v12.68z" style="fill:#000;fill-opacity:1;fill-rule:nonzero;stroke:none"/>
 </svg>
