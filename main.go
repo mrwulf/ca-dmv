@@ -322,6 +322,7 @@ type questionView struct {
 type examView struct {
 	ID         string         `json:"id"`
 	Total      int            `json:"total"`
+	Topic      string         `json:"topic,omitempty"`
 	PassNeeded int            `json:"pass_needed"`
 	Correct    int            `json:"correct"`
 	Finished   bool           `json:"finished"`
@@ -336,7 +337,7 @@ func publicQuestion(q question) questionPublic {
 // viewExam hides the answer and explanation of every question that has not been answered yet.
 // notes holds the user's flagged question ids with their notes.
 func viewExam(e *exam, notes map[string]string) examView {
-	v := examView{ID: e.ID, Total: e.Total, PassNeeded: passNeeded(e.Total), Correct: e.Correct,
+	v := examView{ID: e.ID, Topic: e.Topic, Total: e.Total, PassNeeded: passNeeded(e.Total), Correct: e.Correct,
 		Finished: e.FinishedAt != nil, FinishedAt: e.FinishedAt}
 	for i, q := range e.Questions {
 		note, flagged := notes[q.ID]
@@ -363,12 +364,28 @@ func (s *server) respondExam(w http.ResponseWriter, r *http.Request, u user, sta
 
 func (s *server) createExam(w http.ResponseWriter, r *http.Request, u user) error {
 	var body struct {
-		Length int `json:"length"`
+		Length int    `json:"length"`
+		Topic  string `json:"topic"`
 	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || !slices.Contains(s.lengths(), body.Length) {
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		return errBadRequest
 	}
-	id, err := s.st.createExam(r.Context(), u.Sub, buildExam(s.bank, body.Length))
+	pool, length := s.bank, body.Length
+	if body.Topic != "" {
+		// A focused test: quick-test length, drawn only from the chosen category.
+		pool, length = nil, quickExamLength
+		for _, q := range s.bank {
+			if q.Topic == body.Topic {
+				pool = append(pool, q)
+			}
+		}
+		if len(pool) == 0 {
+			return errBadRequest
+		}
+	} else if !slices.Contains(s.lengths(), length) {
+		return errBadRequest
+	}
+	id, err := s.st.createExam(r.Context(), u.Sub, buildExam(pool, length), body.Topic)
 	if err != nil {
 		return err
 	}

@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS sessions (
   token_hash TEXT PRIMARY KEY,
   sub TEXT NOT NULL REFERENCES users(sub) ON DELETE CASCADE,
-  expires_at INTEGER NOT NULL
+  expires_at INTEGER NOT NULL,
+  id_token TEXT NOT NULL DEFAULT ''
 );
 CREATE TABLE IF NOT EXISTS login_flows (
   state TEXT PRIMARY KEY,
@@ -43,6 +44,7 @@ CREATE TABLE IF NOT EXISTS exams (
   created_at INTEGER NOT NULL,
   finished_at INTEGER,
   deleted_at INTEGER,
+  topic TEXT NOT NULL DEFAULT '',
   total INTEGER NOT NULL,
   correct INTEGER NOT NULL DEFAULT 0,
   questions TEXT NOT NULL
@@ -89,16 +91,25 @@ func openStore(path string) (*store, error) {
 // migrate brings a database created by an older version up to date. Tests are never removed:
 // deleting one only sets exams.deleted_at.
 func migrate(db *sql.DB) error {
-	var n int
-	if err := db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('exams') WHERE name='deleted_at'`).Scan(&n); err != nil {
+	if err := addColumn(db, "exams", "deleted_at", "INTEGER"); err != nil {
 		return err
 	}
-	if n == 0 {
-		if _, err := db.Exec(`ALTER TABLE exams ADD COLUMN deleted_at INTEGER`); err != nil {
-			return err
-		}
+	if err := addColumn(db, "sessions", "id_token", "TEXT NOT NULL DEFAULT ''"); err != nil {
+		return err
 	}
-	return nil
+	return addColumn(db, "exams", "topic", "TEXT NOT NULL DEFAULT ''")
+}
+
+func addColumn(db *sql.DB, table, column, ddl string) error {
+	var n int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('`+table+`') WHERE name=?`, column).Scan(&n); err != nil {
+		return err
+	}
+	if n > 0 {
+		return nil
+	}
+	_, err := db.Exec(`ALTER TABLE ` + table + ` ADD COLUMN ` + column + ` ` + ddl)
+	return err
 }
 
 func randomToken() string {
@@ -148,7 +159,9 @@ func (s *store) takeFlow(ctx context.Context, state string) (nonce, verifier str
 	return nonce, verifier, nil
 }
 
-func (s *store) createSession(ctx context.Context, sub, name string, ttl time.Duration) (string, error) {
+// createSession stores a login session. idToken is kept so logout can send it to the provider as
+// the id_token_hint.
+func (s *store) createSession(ctx context.Context, sub, name, idToken string, ttl time.Duration) (string, error) {
 	token := randomToken()
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -159,8 +172,8 @@ func (s *store) createSession(ctx context.Context, sub, name string, ttl time.Du
 		ON CONFLICT(sub) DO UPDATE SET name=excluded.name`, sub, name, time.Now().Unix()); err != nil {
 		return "", err
 	}
-	if _, err = tx.ExecContext(ctx, `INSERT INTO sessions(token_hash, sub, expires_at) VALUES (?,?,?)`,
-		hashToken(token), sub, time.Now().Add(ttl).Unix()); err != nil {
+	if _, err = tx.ExecContext(ctx, `INSERT INTO sessions(token_hash, sub, expires_at, id_token) VALUES (?,?,?,?)`,
+		hashToken(token), sub, time.Now().Add(ttl).Unix(), idToken); err != nil {
 		return "", err
 	}
 	return token, tx.Commit()
@@ -178,9 +191,22 @@ func (s *store) sessionUser(ctx context.Context, token string) (user, error) {
 	return u, err
 }
 
-func (s *store) deleteSession(ctx context.Context, token string) error {
-	_, err := s.db.ExecContext(ctx, `DELETE FROM sessions WHERE token_hash=?`, hashToken(token))
-	return err
+// endSession deletes the session and returns the ID token it was created with ("" if none).
+func (s *store) endSession(ctx context.Context, token string) (string, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback()
+	var idToken string
+	err = tx.QueryRowContext(ctx, `SELECT id_token FROM sessions WHERE token_hash=?`, hashToken(token)).Scan(&idToken)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return "", err
+	}
+	if _, err = tx.ExecContext(ctx, `DELETE FROM sessions WHERE token_hash=?`, hashToken(token)); err != nil {
+		return "", err
+	}
+	return idToken, tx.Commit()
 }
 
 func (s *store) cleanup(ctx context.Context) error {
@@ -200,6 +226,7 @@ type answer struct {
 }
 
 type exam struct {
+	Topic      string // set for a focused test on one category, empty otherwise
 	ID         string
 	CreatedAt  int64
 	FinishedAt *int64
@@ -210,7 +237,7 @@ type exam struct {
 }
 
 // createExam replaces any unfinished exam of the user with a new one built from qs.
-func (s *store) createExam(ctx context.Context, sub string, qs []question) (string, error) {
+func (s *store) createExam(ctx context.Context, sub string, qs []question, topic string) (string, error) {
 	raw, err := json.Marshal(qs)
 	if err != nil {
 		return "", err
@@ -224,8 +251,8 @@ func (s *store) createExam(ctx context.Context, sub string, qs []question) (stri
 	if _, err = tx.ExecContext(ctx, `UPDATE exams SET deleted_at=? WHERE sub=? AND finished_at IS NULL AND deleted_at IS NULL`, time.Now().Unix(), sub); err != nil {
 		return "", err
 	}
-	if _, err = tx.ExecContext(ctx, `INSERT INTO exams(id, sub, created_at, total, questions) VALUES (?,?,?,?,?)`,
-		id, sub, time.Now().Unix(), len(qs), string(raw)); err != nil {
+	if _, err = tx.ExecContext(ctx, `INSERT INTO exams(id, sub, created_at, total, questions, topic) VALUES (?,?,?,?,?,?)`,
+		id, sub, time.Now().Unix(), len(qs), string(raw), topic); err != nil {
 		return "", err
 	}
 	return id, tx.Commit()
@@ -240,8 +267,8 @@ func loadExam(ctx context.Context, q queryer, sub, id string) (*exam, error) {
 	e := &exam{ID: id, Answers: map[int]answer{}}
 	var raw string
 	var fin sql.NullInt64
-	err := q.QueryRowContext(ctx, `SELECT created_at, finished_at, total, correct, questions FROM exams WHERE id=? AND sub=? AND deleted_at IS NULL`, id, sub).
-		Scan(&e.CreatedAt, &fin, &e.Total, &e.Correct, &raw)
+	err := q.QueryRowContext(ctx, `SELECT created_at, finished_at, total, correct, questions, topic FROM exams WHERE id=? AND sub=? AND deleted_at IS NULL`, id, sub).
+		Scan(&e.CreatedAt, &fin, &e.Total, &e.Correct, &raw, &e.Topic)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, errNotFound
 	} else if err != nil {
@@ -343,6 +370,7 @@ type examSummary struct {
 	Correct    int    `json:"correct"`
 	Total      int    `json:"total"`
 	Passed     bool   `json:"passed"`
+	Topic      string `json:"topic,omitempty"`
 }
 
 type topicStat struct {
@@ -354,7 +382,7 @@ type topicStat struct {
 // stats returns up to 200 finished exams in chronological order plus per-topic accuracy.
 func (s *store) stats(ctx context.Context, sub string) ([]examSummary, []topicStat, error) {
 	exams := []examSummary{}
-	rows, err := s.db.QueryContext(ctx, `SELECT id, finished_at, correct, total FROM exams
+	rows, err := s.db.QueryContext(ctx, `SELECT id, finished_at, correct, total, topic FROM exams
 		WHERE sub=? AND finished_at IS NOT NULL AND deleted_at IS NULL ORDER BY finished_at DESC LIMIT 200`, sub)
 	if err != nil {
 		return nil, nil, err
@@ -362,7 +390,7 @@ func (s *store) stats(ctx context.Context, sub string) ([]examSummary, []topicSt
 	defer rows.Close()
 	for rows.Next() {
 		var e examSummary
-		if err = rows.Scan(&e.ID, &e.FinishedAt, &e.Correct, &e.Total); err != nil {
+		if err = rows.Scan(&e.ID, &e.FinishedAt, &e.Correct, &e.Total, &e.Topic); err != nil {
 			return nil, nil, err
 		}
 		e.Passed = e.Correct >= passNeeded(e.Total)

@@ -4,6 +4,7 @@ A small, phone-first practice app for the California Class C written knowledge t
 
 - Random exams from a bank of about 450 questions: a full practice exam (36 questions by default) or a quick 10. The pass mark is 80%, the figure the DMV publishes.
 - The right answer and an explanation appear right after each answer, with a link to the Driver Handbook section it comes from where the handbook states it, also in the "Think this is wrong?" box.
+- After a missed question, take a focused test on that question's category (10 questions from that category only).
 - Flag any question you think is wrong (with an optional note), review the flagged list, and open any question directly by link (`/#/q/<id>`).
 - Per-user history: score over time, a mastery bar across all questions, per-topic accuracy (weakest first), and a review of missed questions.
 - Sign in with any OpenID Connect provider (built for Pocket ID). The app keeps only the OIDC subject and display name.
@@ -25,7 +26,7 @@ All settings are environment variables.
 | `LISTEN_ADDR` | no | `:8080` | |
 | `FULL_EXAM_LENGTH` | no | `36` | Questions in the full practice exam. The DMV does not currently publish the real test's length, so adjust to taste |
 
-In the provider, register the redirect URI `${BASE_URL}/auth/callback` and the scopes `openid profile email`. Access control is whatever your provider enforces (for Pocket ID, restrict the client to a user group); the app has no roles.
+In the provider, register the redirect URI `${BASE_URL}/auth/callback`, the post-logout redirect URI `${BASE_URL}/`, and the scopes `openid profile email`. Signing out ends the app's session and then sends the browser to the provider's `end_session_endpoint` (found through discovery) with the ID token, so the provider session ends too; without that the provider would sign the user straight back in. A provider with no `end_session_endpoint` just gets a local sign-out. Access control is whatever your provider enforces (for Pocket ID, restrict the client to a user group); the app has no roles.
 
 ## Run
 

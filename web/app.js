@@ -169,9 +169,17 @@ async function home() {
   );
 }
 
+// The server ends our session and returns the identity provider's logout URL, which has to be
+// visited too or the provider would sign the user straight back in.
 async function logout() {
-  await fetch("/auth/logout", { method: "POST" });
-  location.href = "/";
+  let next = "/";
+  try {
+    const res = await fetch("/auth/logout", { method: "POST" });
+    if (res.ok) next = (await res.json()).redirect || "/";
+  } catch (e) {
+    // Fall through to the local sign-out page.
+  }
+  location.href = next;
 }
 
 // ---------- Exam ----------
@@ -266,6 +274,7 @@ async function results(id) {
     h("div", { class: "card center" },
       h("div", { class: `score ${passed ? "pass" : "fail"}` }, `${view.correct} / ${view.total}`),
       h("strong", { class: passed ? "pass" : "fail" }, passed ? "Pass" : "Not yet"),
+      view.topic && h("p", { class: "muted" }, `Focused test: ${topicName(view.topic)}`),
       h("p", { class: "muted" }, `${pct(view.correct, view.total)}% · ${view.pass_needed} correct needed to pass (80%)`)),
     h("div", { class: "stack" },
       h("button", { onclick: () => again(view.total).catch(showError) }, "Take another one"),
@@ -283,7 +292,7 @@ async function results(id) {
         h("p", {}, h("strong", {}, "Correct: "), q.options[q.correct_index]),
         h("p", { class: "muted" }, q.explanation),
         sourceLink(q.source_label, q.source_url),
-        h("p", {}, h("a", { href: `#/q/${q.id}` }, "Try this question again")),
+        categoryBlock(q.topic),
         flagBox(q.id, q, true))),
   );
 }
@@ -315,10 +324,22 @@ async function progress() {
     h("h2", {}, "Recent exams"),
     h("div", { class: "list" }, [...exams].reverse().slice(0, 20).map((e) =>
       h("a", { href: `#/results/${e.id}` },
-        h("span", {}, fmtDate(e.finished_at)),
+        h("span", {}, e.topic ? `${fmtDate(e.finished_at)} · ${topicName(e.topic)}` : fmtDate(e.finished_at)),
         h("span", {}, `${e.correct}/${e.total} · ${pct(e.correct, e.total)}%`)))),
   );
   show(...nodes);
+}
+
+// The question's category, with a way to practice that whole category instead of just this question.
+async function startTopicTest(topic) {
+  const exam = await api("/api/exams", { topic });
+  location.hash = `#/exam/${exam.id}`;
+}
+
+function categoryBlock(topic) {
+  return h("div", { class: "stack" },
+    h("p", { class: "muted" }, `Category: ${topicName(topic)}`),
+    h("button", { class: "secondary", onclick: () => startTopicTest(topic).catch(showError) }, `Take a focused test on ${topicName(topic)}`));
 }
 
 // A question counts as mastered when it was answered correctly the last time it was seen.
@@ -430,7 +451,7 @@ async function practice(id) {
         h("strong", {}, res.correct ? "Correct" : "Not quite"),
         h("span", {}, res.explanation),
         sourceLink(res.source_label, res.source_url)),
-      res && h("div", { class: "sticky" }, h("button", { onclick: () => route() }, "Try again")),
+      res && categoryBlock(q.topic),
       flagBox(q.id, q, !!res),
     );
   };

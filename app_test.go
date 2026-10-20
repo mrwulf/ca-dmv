@@ -76,11 +76,11 @@ func newTestStore(t *testing.T) *store {
 func TestExamFlow(t *testing.T) {
 	ctx := context.Background()
 	st := newTestStore(t)
-	if _, err := st.createSession(ctx, "user-1", "Pat", sessionTTL); err != nil {
+	if _, err := st.createSession(ctx, "user-1", "Pat", "", sessionTTL); err != nil {
 		t.Fatal(err)
 	}
 	bank, _ := loadBank(questionsJSON)
-	id, err := st.createExam(ctx, "user-1", buildExam(bank, 3))
+	id, err := st.createExam(ctx, "user-1", buildExam(bank, 3), "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -134,10 +134,10 @@ func TestExamFlow(t *testing.T) {
 func TestNewExamReplacesUnfinished(t *testing.T) {
 	ctx := context.Background()
 	st := newTestStore(t)
-	st.createSession(ctx, "u", "U", sessionTTL)
+	st.createSession(ctx, "u", "U", "", sessionTTL)
 	bank, _ := loadBank(questionsJSON)
-	first, _ := st.createExam(ctx, "u", buildExam(bank, 3))
-	second, _ := st.createExam(ctx, "u", buildExam(bank, 3))
+	first, _ := st.createExam(ctx, "u", buildExam(bank, 3), "")
+	second, _ := st.createExam(ctx, "u", buildExam(bank, 3), "")
 	if _, err := st.getExam(ctx, "u", first); err != errNotFound {
 		t.Fatal("unfinished exam should be replaced")
 	}
@@ -149,18 +149,25 @@ func TestNewExamReplacesUnfinished(t *testing.T) {
 func TestSessionLifecycle(t *testing.T) {
 	ctx := context.Background()
 	st := newTestStore(t)
-	tok, err := st.createSession(ctx, "u", "U", sessionTTL)
+	tok, err := st.createSession(ctx, "u", "U", "", sessionTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if u, err := st.sessionUser(ctx, tok); err != nil || u.Sub != "u" {
 		t.Fatalf("session lookup: %v %+v", err, u)
 	}
-	st.deleteSession(ctx, tok)
+	tok2, _ := st.createSession(ctx, "u", "U", "the-id-token", sessionTTL)
+	if idt, err := st.endSession(ctx, tok2); err != nil || idt != "the-id-token" {
+		t.Fatalf("endSession returned %q, %v", idt, err)
+	}
+	if _, err := st.sessionUser(ctx, tok2); err != errNotFound {
+		t.Fatal("ended session still valid")
+	}
+	st.endSession(ctx, tok)
 	if _, err := st.sessionUser(ctx, tok); err != errNotFound {
 		t.Fatal("deleted session still valid")
 	}
-	expired, _ := st.createSession(ctx, "u", "U", -1)
+	expired, _ := st.createSession(ctx, "u", "U", "", -1)
 	if _, err := st.sessionUser(ctx, expired); err != errNotFound {
 		t.Fatal("expired session still valid")
 	}
@@ -230,7 +237,7 @@ func newAPIClient(t *testing.T) *apiClient {
 	for _, q := range bank {
 		s.byID[q.ID] = q
 	}
-	tok, err := st.createSession(context.Background(), "user-1", "Pat", sessionTTL)
+	tok, err := st.createSession(context.Background(), "user-1", "Pat", "", sessionTTL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -428,7 +435,7 @@ func TestShuffleSpreadsCorrectAnswer(t *testing.T) {
 func finishExam(t *testing.T, st *store, sub string, qs []question, pick func(q question) int) string {
 	t.Helper()
 	ctx := context.Background()
-	id, err := st.createExam(ctx, sub, qs)
+	id, err := st.createExam(ctx, sub, qs, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -582,5 +589,67 @@ func TestMeReportsVersion(t *testing.T) {
 	var me struct{ Version, Commit string }
 	if code := c.do("GET", "/api/me", nil, &me); code != 200 || me.Version != "v9.9.9" || me.Commit != "0123456" {
 		t.Fatalf("me = %d %+v", code, me)
+	}
+}
+
+func TestFocusedTest(t *testing.T) {
+	c := newAPIClient(t)
+	bank, _ := loadBank(questionsJSON)
+	inTopic := map[string]bool{}
+	for _, q := range bank {
+		if q.Topic == "parking" {
+			inTopic[q.ID] = true
+		}
+	}
+	var ex struct {
+		ID        string `json:"id"`
+		Topic     string `json:"topic"`
+		Total     int    `json:"total"`
+		Questions []struct {
+			ID    string `json:"id"`
+			Topic string `json:"topic"`
+		} `json:"questions"`
+	}
+	if code := c.do("POST", "/api/exams", map[string]any{"topic": "parking"}, &ex); code != http.StatusCreated {
+		t.Fatalf("create focused test = %d", code)
+	}
+	if ex.Topic != "parking" || ex.Total != quickExamLength || len(ex.Questions) != quickExamLength {
+		t.Fatalf("focused test shape: topic=%q total=%d questions=%d", ex.Topic, ex.Total, len(ex.Questions))
+	}
+	for _, q := range ex.Questions {
+		if q.Topic != "parking" || !inTopic[q.ID] {
+			t.Fatalf("question %s (%s) is not in the parking category", q.ID, q.Topic)
+		}
+	}
+	if code := c.do("POST", "/api/exams", map[string]any{"topic": "not-a-category"}, nil); code != http.StatusBadRequest {
+		t.Fatalf("unknown category = %d, want 400", code)
+	}
+	// A normal test is unaffected and has no category.
+	var normal struct{ Topic string }
+	if code := c.do("POST", "/api/exams", map[string]int{"length": quickExamLength}, &normal); code != http.StatusCreated || normal.Topic != "" {
+		t.Fatalf("normal test: %d topic=%q", code, normal.Topic)
+	}
+}
+
+func TestFocusedTestTopicShowsInStats(t *testing.T) {
+	c := newAPIClient(t)
+	bank, _ := loadBank(questionsJSON)
+	var qs []question
+	for _, q := range bank {
+		if q.Topic == "signs" && len(qs) < 3 {
+			qs = append(qs, q)
+		}
+	}
+	id, err := c.st.createExam(context.Background(), "user-1", qs, "signs")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for pos, q := range qs {
+		c.st.answerQuestion(context.Background(), "user-1", id, pos, q.Answer)
+	}
+	var stats struct{ Exams []examSummary }
+	c.do("GET", "/api/stats", nil, &stats)
+	if len(stats.Exams) != 1 || stats.Exams[0].Topic != "signs" {
+		t.Fatalf("stats exams = %+v", stats.Exams)
 	}
 }

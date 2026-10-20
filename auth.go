@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
@@ -26,6 +27,8 @@ type authn struct {
 	mu       sync.Mutex
 	oauth    *oauth2.Config
 	verifier *oidc.IDTokenVerifier
+	// endSession is the provider's end_session_endpoint from discovery; empty if it has none.
+	endSession string
 }
 
 // init discovers the provider lazily so the app starts even if the IdP is briefly down.
@@ -49,6 +52,13 @@ func (a *authn) init(ctx context.Context) (*oauth2.Config, *oidc.IDTokenVerifier
 		Scopes:       []string{oidc.ScopeOpenID, "profile", "email"},
 	}
 	a.verifier = p.Verifier(&oidc.Config{ClientID: a.cfg.clientID})
+	var disc struct {
+		EndSessionEndpoint string `json:"end_session_endpoint"`
+	}
+	if err = p.Claims(&disc); err != nil {
+		return nil, nil, fmt.Errorf("oidc discovery claims: %w", err)
+	}
+	a.endSession = disc.EndSessionEndpoint
 	return a.oauth, a.verifier, nil
 }
 
@@ -124,7 +134,7 @@ func (a *authn) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	name := firstNonEmpty(claims.Name, claims.PreferredUsername, claims.Email, "Driver")
-	token, err := a.st.createSession(r.Context(), idt.Subject, name, sessionTTL)
+	token, err := a.st.createSession(r.Context(), idt.Subject, name, rawID, sessionTTL)
 	if err != nil {
 		slog.Error("create session", "err", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -134,14 +144,38 @@ func (a *authn) callback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
+// logout ends the local session and answers with where the browser should go next. Clearing our own
+// cookie is not enough: the provider still has the user signed in, so the next visit would log them
+// straight back in. When the provider advertises an end_session_endpoint, send the browser there
+// (OIDC RP-initiated logout), with a return address back to this app.
 func (a *authn) logout(w http.ResponseWriter, r *http.Request) {
+	var idToken string
 	if c, err := r.Cookie(sessionCookie); err == nil {
-		if err = a.st.deleteSession(r.Context(), c.Value); err != nil {
-			slog.Error("delete session", "err", err)
+		if idToken, err = a.st.endSession(r.Context(), c.Value); err != nil {
+			slog.Error("end session", "err", err)
 		}
 	}
 	http.SetCookie(w, a.cookie(sessionCookie, "", "/", -1))
-	w.WriteHeader(http.StatusNoContent)
+	writeJSON(w, http.StatusOK, map[string]string{"redirect": a.providerLogoutURL(r.Context(), idToken)})
+}
+
+func (a *authn) providerLogoutURL(ctx context.Context, idToken string) string {
+	if _, _, err := a.init(ctx); err != nil {
+		slog.Warn("logout: provider unavailable, signing out locally only", "err", err)
+		return "/"
+	}
+	u, err := url.Parse(a.endSession)
+	if a.endSession == "" || err != nil || (u.Scheme != "https" && u.Scheme != "http") {
+		return "/"
+	}
+	q := u.Query()
+	q.Set("client_id", a.cfg.clientID)
+	q.Set("post_logout_redirect_uri", a.cfg.baseURL+"/")
+	if idToken != "" {
+		q.Set("id_token_hint", idToken)
+	}
+	u.RawQuery = q.Encode()
+	return u.String()
 }
 
 func (a *authn) currentUser(r *http.Request) (user, error) {

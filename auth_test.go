@@ -25,6 +25,8 @@ type fakeIdP struct {
 	clientID  string
 	nonce     string
 	challenge string
+	// noEndSession omits end_session_endpoint from discovery.
+	noEndSession bool
 }
 
 func newFakeIdP(t *testing.T, clientID string) *fakeIdP {
@@ -36,10 +38,14 @@ func newFakeIdP(t *testing.T, clientID string) *fakeIdP {
 	f := &fakeIdP{key: key, clientID: clientID}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(w).Encode(map[string]any{
+		doc := map[string]any{
 			"issuer": f.srv.URL, "authorization_endpoint": f.srv.URL + "/authorize", "token_endpoint": f.srv.URL + "/token",
 			"jwks_uri": f.srv.URL + "/jwks", "id_token_signing_alg_values_supported": []string{"RS256"},
-		})
+		}
+		if !f.noEndSession {
+			doc["end_session_endpoint"] = f.srv.URL + "/endsession"
+		}
+		json.NewEncoder(w).Encode(doc)
 	})
 	mux.HandleFunc("/jwks", func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(jose.JSONWebKeySet{Keys: []jose.JSONWebKey{{Key: &key.PublicKey, KeyID: "k", Algorithm: "RS256", Use: "sig"}}})
@@ -114,7 +120,7 @@ func TestLoginFlow(t *testing.T) {
 	// Logout ends the session.
 	req, _ := http.NewRequest("POST", app.URL+"/auth/logout", nil)
 	req.Header.Set("Origin", app.URL)
-	if res, _ = client.Do(req); res.StatusCode != http.StatusNoContent {
+	if res, _ = client.Do(req); res.StatusCode != http.StatusOK {
 		t.Fatalf("logout = %d", res.StatusCode)
 	}
 	if res, _ = client.Get(app.URL + "/api/me"); res.StatusCode != http.StatusUnauthorized {
@@ -139,5 +145,64 @@ func TestCallbackRejectsForeignState(t *testing.T) {
 	h.ServeHTTP(w, httptest.NewRequest("GET", "/auth/callback?code=abc&state="+url.QueryEscape(state), nil))
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("callback without state cookie = %d, want 400", w.Code)
+	}
+}
+
+// loginAndLogout signs in through the fake IdP and returns the JSON the logout endpoint answers with.
+func loginAndLogout(t *testing.T, idp *fakeIdP) (appURL string, redirect string, client *http.Client) {
+	t.Helper()
+	st, err := openStore(filepath.Join(t.TempDir(), "t.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var handler http.Handler
+	app := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { handler.ServeHTTP(w, r) }))
+	t.Cleanup(app.Close)
+	cfg := config{issuer: idp.srv.URL, clientID: "cid", baseURL: app.URL}
+	s := &server{cfg: cfg, st: st, auth: &authn{cfg: cfg, st: st}}
+	handler = s.routes()
+
+	jar, _ := cookiejar.New(nil)
+	client = &http.Client{Jar: jar}
+	if res, err := client.Get(app.URL + "/auth/login"); err != nil || res.StatusCode != http.StatusOK {
+		t.Fatalf("login: %v %v", err, res)
+	}
+	req, _ := http.NewRequest("POST", app.URL+"/auth/logout", nil)
+	req.Header.Set("Origin", app.URL)
+	res, err := client.Do(req)
+	if err != nil || res.StatusCode != http.StatusOK {
+		t.Fatalf("logout: %v %v", err, res)
+	}
+	var body struct{ Redirect string }
+	json.NewDecoder(res.Body).Decode(&body)
+	return app.URL, body.Redirect, client
+}
+
+// Logout must send the browser to the provider's end_session_endpoint with the ID token, or the
+// provider keeps the user signed in and logs them straight back in.
+func TestLogoutUsesProviderEndSession(t *testing.T) {
+	idp := newFakeIdP(t, "cid")
+	appURL, redirect, client := loginAndLogout(t, idp)
+
+	u, err := url.Parse(redirect)
+	if err != nil || u.Scheme+"://"+u.Host != idp.srv.URL || u.Path != "/endsession" {
+		t.Fatalf("redirect = %q, want the IdP end_session_endpoint", redirect)
+	}
+	q := u.Query()
+	if q.Get("client_id") != "cid" || q.Get("post_logout_redirect_uri") != appURL+"/" || q.Get("id_token_hint") == "" {
+		t.Fatalf("end_session query = %v", q)
+	}
+	// The local session is gone too.
+	if res, _ := client.Get(appURL + "/api/me"); res.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("after logout /api/me = %d", res.StatusCode)
+	}
+}
+
+func TestLogoutWithoutEndSessionEndpoint(t *testing.T) {
+	idp := newFakeIdP(t, "cid")
+	idp.noEndSession = true
+	_, redirect, _ := loginAndLogout(t, idp)
+	if redirect != "/" {
+		t.Fatalf("redirect = %q, want /", redirect)
 	}
 }
