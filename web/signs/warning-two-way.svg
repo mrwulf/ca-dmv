@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Yellow diamond warning sign showing two-way traffic ahead">
+  <polygon points="100,10 190,100 100,190 10,100" fill="#fcc233" stroke="#000000" stroke-width="5"/>
+  <polygon points="100,22 178,100 100,178 22,100" fill="none" stroke="#000000" stroke-width="2"/>
+  <!-- Up arrow (left side) -->
+  <path d="M 80 150 L 80 70" stroke="#000000" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <polygon points="68,80 80,55 92,80" fill="#000000"/>
+  <!-- Down arrow (right side) -->
+  <path d="M 120 50 L 120 130" stroke="#000000" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <polygon points="108,120 120,145 132,120" fill="#000000"/>
+</svg>

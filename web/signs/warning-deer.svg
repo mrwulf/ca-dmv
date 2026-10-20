@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Yellow diamond warning sign showing a deer crossing the road">
+  <polygon points="100,10 190,100 100,190 10,100" fill="#fcc233" stroke="#000000" stroke-width="5"/>
+  <polygon points="100,22 178,100 100,178 22,100" fill="none" stroke="#000000" stroke-width="2"/>
+  <!-- Deer silhouette -->
+  <g fill="#000000">
+    <!-- Body -->
+    <ellipse cx="105" cy="120" rx="34" ry="14"/>
+    <!-- Neck/head -->
+    <path d="M 130 110 L 145 90 L 153 86 L 150 96 L 140 106 Z"/>
+    <!-- Antlers -->
+    <path d="M 148 90 L 142 70 M 148 90 L 156 72 M 145 80 L 138 78 M 153 80 L 162 78" stroke="#000000" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <!-- Legs -->
+    <rect x="80" y="130" width="5" height="28"/>
+    <rect x="92" y="130" width="5" height="28"/>
+    <rect x="118" y="130" width="5" height="28"/>
+    <rect x="128" y="130" width="5" height="28"/>
+    <!-- Tail -->
+    <path d="M 73 116 L 65 110 L 70 122 Z"/>
+  </g>
+</svg>

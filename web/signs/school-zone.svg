@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Pentagonal yellow-green school zone sign showing two pedestrians">
+  <polygon points="100,10 190,80 160,190 40,190 10,80" fill="#c4dd2c" stroke="#000000" stroke-width="5"/>
+  <polygon points="100,22 178,84 152,180 48,180 22,84" fill="none" stroke="#000000" stroke-width="2"/>
+  <!-- Two stick figures (adult + child) -->
+  <g fill="#000000">
+    <!-- Adult -->
+    <circle cx="78" cy="100" r="9"/>
+    <path d="M 78 110 L 78 145 L 70 170 M 78 145 L 86 170 M 70 125 L 86 125" stroke="#000000" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <!-- Child -->
+    <circle cx="118" cy="115" r="7"/>
+    <path d="M 118 123 L 118 150 L 112 168 M 118 150 L 124 168 M 112 134 L 124 134" stroke="#000000" stroke-width="5" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

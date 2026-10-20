@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" role="img" aria-label="Two-way road with one solid yellow centerline (no passing on either side) and white edge lines">
+  <!-- Asphalt -->
+  <rect x="0" y="20" width="240" height="160" fill="#3a3a3a"/>
+  <!-- Edge lines (solid white) -->
+  <rect x="6" y="36" width="228" height="3" fill="#ffffff"/>
+  <rect x="6" y="161" width="228" height="3" fill="#ffffff"/>
+  <!-- Center: two solid yellow lines (typical of CA "no passing either direction") -->
+  <rect x="6" y="96" width="228" height="3" fill="#ffd400"/>
+  <rect x="6" y="101" width="228" height="3" fill="#ffd400"/>
+</svg>

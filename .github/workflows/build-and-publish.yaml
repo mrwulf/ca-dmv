@@ -1,0 +1,78 @@
+name: Build and publish
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  packages: write
+  attestations: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: "go.mod"
+          # Do not cache in release workflows
+          cache: false
+
+      - name: Test
+        run: go test -count=1 ./...
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+        with:
+          cache-binary: false
+
+      # Container registry paths must be lowercase
+      - name: Set lowercase REPO_OWNER
+        run: echo "REPO_OWNER=${GITHUB_REPOSITORY_OWNER,,}" >>"${GITHUB_ENV}"
+
+      - name: Generate container tags and labels
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/${{ env.REPO_OWNER }}/ca-dmv
+          tags: |
+            type=edge,branch=main
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern=v{{version}}
+            type=semver,pattern=v{{major}}.{{minor}}
+
+      - name: Login to container registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push container image
+        id: docker-build-push
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          context: .
+          file: Dockerfile
+          push: true
+
+      - name: Container image attestation
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # 4.2.1
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          subject-name: ghcr.io/${{ env.REPO_OWNER }}/ca-dmv
+          subject-digest: ${{ steps.docker-build-push.outputs.digest }}
+          push-to-registry: true

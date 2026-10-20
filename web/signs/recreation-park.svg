@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" role="img" aria-label="Brown rectangular recreation sign reading PARK">
+  <rect x="6" y="30" width="228" height="140" rx="4" fill="#7a5230" stroke="#000000" stroke-width="3"/>
+  <rect x="14" y="38" width="212" height="124" fill="none" stroke="#ffffff" stroke-width="2"/>
+  <!-- Tree icon -->
+  <g fill="#ffffff" transform="translate(50,98)">
+    <path d="M 0 -36 L -22 0 L -10 0 L -22 22 L 22 22 L 10 0 L 22 0 Z"/>
+    <rect x="-6" y="22" width="12" height="14"/>
+  </g>
+  <text x="148" y="120" text-anchor="middle" font-family="Arial Black, Helvetica, sans-serif" font-size="46" font-weight="900" fill="#ffffff" letter-spacing="2">PARK</text>
+</svg>

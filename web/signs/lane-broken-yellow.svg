@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 200" role="img" aria-label="Two-way road with a broken yellow centerline (passing permitted) and white edge lines">
+  <rect x="0" y="20" width="240" height="160" fill="#3a3a3a"/>
+  <rect x="6" y="36" width="228" height="3" fill="#ffffff"/>
+  <rect x="6" y="161" width="228" height="3" fill="#ffffff"/>
+  <!-- Broken yellow center -->
+  <g fill="#ffd400">
+    <rect x="10" y="98" width="22" height="4"/>
+    <rect x="44" y="98" width="22" height="4"/>
+    <rect x="78" y="98" width="22" height="4"/>
+    <rect x="112" y="98" width="22" height="4"/>
+    <rect x="146" y="98" width="22" height="4"/>
+    <rect x="180" y="98" width="22" height="4"/>
+    <rect x="214" y="98" width="22" height="4"/>
+  </g>
+</svg>

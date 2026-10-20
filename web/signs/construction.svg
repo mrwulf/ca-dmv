@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Orange diamond construction warning sign showing a worker silhouette">
+  <polygon points="100,10 190,100 100,190 10,100" fill="#ff6f1f" stroke="#000000" stroke-width="5"/>
+  <polygon points="100,22 178,100 100,178 22,100" fill="none" stroke="#000000" stroke-width="2"/>
+  <!-- Worker silhouette -->
+  <g fill="#000000">
+    <!-- Hard hat -->
+    <ellipse cx="100" cy="76" rx="14" ry="9"/>
+    <rect x="84" y="80" width="32" height="3"/>
+    <!-- Head -->
+    <circle cx="100" cy="92" r="9"/>
+    <!-- Body -->
+    <path d="M 86 110 L 86 138 L 78 152 L 88 152 L 92 124 L 108 124 L 112 152 L 122 152 L 114 138 L 114 110 Z"/>
+    <!-- Shovel -->
+    <line x1="115" y1="118" x2="142" y2="86" stroke="#000000" stroke-width="4"/>
+    <path d="M 132 76 L 152 78 L 142 92 Z"/>
+  </g>
+</svg>

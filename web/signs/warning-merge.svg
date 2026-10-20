@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Yellow diamond warning sign showing the right lane ending and merging left">
+  <polygon points="100,10 190,100 100,190 10,100" fill="#fcc233" stroke="#000000" stroke-width="5"/>
+  <polygon points="100,22 178,100 100,178 22,100" fill="none" stroke="#000000" stroke-width="2"/>
+  <!-- Through arrow (left lane, straight) -->
+  <path d="M 80 160 L 80 60" stroke="#000000" stroke-width="10" fill="none" stroke-linecap="round"/>
+  <polygon points="68,68 80,46 92,68" fill="#000000"/>
+  <!-- Merging arrow (right lane, curving left) -->
+  <path d="M 120 160 L 120 100 Q 120 78 100 78" stroke="#000000" stroke-width="10" fill="none" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 120" role="img" aria-label="Section of curb painted blue indicating disabled parking">
+  <rect x="0" y="0" width="240" height="60" fill="#7a7a7a"/>
+  <rect x="0" y="60" width="240" height="14" fill="#bcbcbc"/>
+  <rect x="0" y="74" width="240" height="46" fill="#3a3a3a"/>
+  <rect x="0" y="60" width="240" height="14" fill="#0846a6"/>
+  <text x="120" y="95" text-anchor="middle" font-family="Arial Black, Helvetica, sans-serif" font-size="14" font-weight="900" fill="#ffffff">BLUE CURB</text>
+</svg>

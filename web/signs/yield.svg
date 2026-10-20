@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Downward-pointing triangular YIELD sign">
+  <polygon points="10,30 190,30 100,185" fill="#c8102e" stroke="#ffffff" stroke-width="2"/>
+  <polygon points="28,42 172,42 100,166" fill="#ffffff" stroke="#c8102e" stroke-width="2"/>
+  <text x="100" y="98" text-anchor="middle" font-family="Arial Black, Helvetica, sans-serif" font-size="32" font-weight="900" fill="#c8102e" letter-spacing="2">YIELD</text>
+</svg>

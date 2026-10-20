@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Overhead lane-control signal showing a steady yellow X meaning the lane is about to close">
+  <rect x="6" y="6" width="188" height="188" rx="6" fill="#222222" stroke="#000000" stroke-width="3"/>
+  <line x1="40" y1="40" x2="160" y2="160" stroke="#fcb80a" stroke-width="22" stroke-linecap="round"/>
+  <line x1="160" y1="40" x2="40" y2="160" stroke="#fcb80a" stroke-width="22" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,445 @@
+package main
+
+import (
+	"context"
+	"embed"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/fs"
+	"log/slog"
+	"net/http"
+	"net/url"
+	"os"
+	"os/signal"
+	"slices"
+	"strconv"
+	"strings"
+	"syscall"
+	"time"
+	"unicode/utf8"
+)
+
+//go:embed web
+var webFS embed.FS
+
+//go:embed questions/questions.json
+var questionsJSON []byte
+
+type config struct {
+	listen       string
+	baseURL      string
+	secure       bool
+	dbPath       string
+	issuer       string
+	clientID     string
+	clientSecret string
+	fullLength   int
+}
+
+func loadConfig() (config, error) {
+	c := config{
+		listen:       envOr("LISTEN_ADDR", ":8080"),
+		baseURL:      strings.TrimRight(os.Getenv("BASE_URL"), "/"),
+		dbPath:       envOr("DB_PATH", "/data/ca-dmv.db"),
+		issuer:       os.Getenv("OIDC_ISSUER_URL"),
+		clientID:     os.Getenv("OIDC_CLIENT_ID"),
+		clientSecret: os.Getenv("OIDC_CLIENT_SECRET"), // optional: leave empty for a public PKCE client
+		fullLength:   defaultFullExamLength,
+	}
+	if v := os.Getenv("FULL_EXAM_LENGTH"); v != "" {
+		n, err := strconv.Atoi(v)
+		if err != nil || n <= quickExamLength {
+			return c, fmt.Errorf("FULL_EXAM_LENGTH must be a number greater than %d", quickExamLength)
+		}
+		c.fullLength = n
+	}
+	for name, v := range map[string]string{"BASE_URL": c.baseURL, "OIDC_ISSUER_URL": c.issuer, "OIDC_CLIENT_ID": c.clientID} {
+		if v == "" {
+			return c, fmt.Errorf("%s is required", name)
+		}
+	}
+	u, err := url.Parse(c.baseURL)
+	if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" {
+		return c, errors.New("BASE_URL must be an absolute http(s) URL")
+	}
+	c.secure = u.Scheme == "https"
+	return c, nil
+}
+
+func envOr(k, def string) string {
+	if v := os.Getenv(k); v != "" {
+		return v
+	}
+	return def
+}
+
+type server struct {
+	cfg  config
+	st   *store
+	auth *authn
+	bank []question
+	byID map[string]question
+}
+
+func (s *server) lengths() []int { return []int{quickExamLength, s.cfg.fullLength} }
+
+func main() {
+	if err := run(); err != nil {
+		slog.Error("fatal", "err", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	cfg, err := loadConfig()
+	if err != nil {
+		return err
+	}
+	bank, err := loadBank(questionsJSON)
+	if err != nil {
+		return fmt.Errorf("question bank: %w", err)
+	}
+	st, err := openStore(cfg.dbPath)
+	if err != nil {
+		return fmt.Errorf("open database: %w", err)
+	}
+	if cfg.fullLength > len(bank) {
+		return fmt.Errorf("FULL_EXAM_LENGTH %d is more than the %d questions available", cfg.fullLength, len(bank))
+	}
+	s := &server{cfg: cfg, st: st, auth: &authn{cfg: cfg, st: st}, bank: bank, byID: map[string]question{}}
+	for _, q := range bank {
+		s.byID[q.ID] = q
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	go func() {
+		for {
+			if err := st.cleanup(ctx); err != nil && ctx.Err() == nil {
+				slog.Error("cleanup", "err", err)
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(time.Hour):
+			}
+		}
+	}()
+
+	srv := &http.Server{
+		Addr:              cfg.listen,
+		Handler:           s.routes(),
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       120 * time.Second,
+	}
+	go func() {
+		<-ctx.Done()
+		shutdown, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		srv.Shutdown(shutdown)
+	}()
+	slog.Info("listening", "addr", cfg.listen, "questions", len(bank))
+	if err = srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+	return nil
+}
+
+func (s *server) routes() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) { w.Write([]byte("ok")) })
+	mux.HandleFunc("GET /auth/login", s.auth.login)
+	mux.HandleFunc("GET /auth/callback", s.auth.callback)
+	mux.Handle("POST /auth/logout", s.sameOrigin(http.HandlerFunc(s.auth.logout)))
+	mux.Handle("GET /api/me", s.api(s.me))
+	mux.Handle("POST /api/exams", s.api(s.createExam))
+	mux.Handle("GET /api/exams/{id}", s.api(s.getExam))
+	mux.Handle("POST /api/exams/{id}/answer", s.api(s.answer))
+	mux.Handle("GET /api/stats", s.api(s.stats))
+	mux.Handle("GET /api/questions/{id}", s.api(s.getQuestion))
+	mux.Handle("POST /api/questions/{id}/check", s.api(s.checkQuestion))
+	mux.Handle("GET /api/flags", s.api(s.listFlags))
+	mux.Handle("PUT /api/flags/{id}", s.api(s.putFlag))
+	mux.Handle("DELETE /api/flags/{id}", s.api(s.deleteFlag))
+
+	web, _ := fs.Sub(webFS, "web")
+	files := http.FileServerFS(web)
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/signs/") {
+			w.Header().Set("Cache-Control", "public, max-age=86400")
+		} else {
+			w.Header().Set("Cache-Control", "no-cache")
+		}
+		files.ServeHTTP(w, r)
+	}))
+	return securityHeaders(mux)
+}
+
+func securityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; manifest-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("Referrer-Policy", "no-referrer")
+		h.Set("Cross-Origin-Opener-Policy", "same-origin")
+		next.ServeHTTP(w, r)
+	})
+}
+
+// sameOrigin rejects state-changing requests that did not come from this site.
+func (s *server) sameOrigin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if site := r.Header.Get("Sec-Fetch-Site"); site != "" && site != "same-origin" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+		if o := r.Header.Get("Origin"); o != "" && o != s.cfg.baseURL {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+type apiHandler func(w http.ResponseWriter, r *http.Request, u user) error
+
+// api wraps a handler with session auth, the same-origin check for POSTs, a body limit and error mapping.
+func (s *server) api(h apiHandler) http.Handler {
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "no-store")
+		u, err := s.auth.currentUser(r)
+		if err != nil {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+			return
+		}
+		r.Body = http.MaxBytesReader(w, r.Body, 4096)
+		switch err = h(w, r, u); {
+		case err == nil:
+		case errors.Is(err, errNotFound):
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "not found"})
+		case errors.Is(err, errBadRequest):
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "bad request"})
+		default:
+			slog.Error("api", "path", r.URL.Path, "err", err)
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		}
+	})
+	return s.sameOriginUnsafe(inner)
+}
+
+// sameOriginUnsafe applies the origin check only to non-GET requests.
+func (s *server) sameOriginUnsafe(next http.Handler) http.Handler {
+	checked := s.sameOrigin(next)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			next.ServeHTTP(w, r)
+			return
+		}
+		checked.ServeHTTP(w, r)
+	})
+}
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(v)
+}
+
+func (s *server) me(w http.ResponseWriter, r *http.Request, u user) error {
+	active, err := s.st.activeExam(r.Context(), u.Sub)
+	if err != nil {
+		return err
+	}
+	flags, err := s.st.listFlags(r.Context(), u.Sub)
+	if err != nil {
+		return err
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"name": u.Name, "active_exam": active, "lengths": s.lengths(),
+		"pass_percent": passPercent, "flag_count": len(flags),
+	})
+	return nil
+}
+
+type sourceView struct {
+	URL   string `json:"source_url,omitempty"`
+	Label string `json:"source_label,omitempty"`
+}
+
+type questionView struct {
+	questionPublic
+	Pos          int    `json:"pos"`
+	Flagged      bool   `json:"flagged"`
+	FlagNote     string `json:"flag_note,omitempty"`
+	Chosen       *int   `json:"chosen,omitempty"`
+	CorrectIndex *int   `json:"correct_index,omitempty"`
+	Explanation  string `json:"explanation,omitempty"`
+	sourceView
+}
+
+type examView struct {
+	ID         string         `json:"id"`
+	Total      int            `json:"total"`
+	PassNeeded int            `json:"pass_needed"`
+	Correct    int            `json:"correct"`
+	Finished   bool           `json:"finished"`
+	FinishedAt *int64         `json:"finished_at,omitempty"`
+	Questions  []questionView `json:"questions"`
+}
+
+func publicQuestion(q question) questionPublic {
+	return questionPublic{ID: q.ID, Topic: q.Topic, Text: q.Question, Options: q.Options, Image: q.Image, ImageAlt: q.ImageAlt}
+}
+
+// viewExam hides the answer and explanation of every question that has not been answered yet.
+// notes holds the user's flagged question ids with their notes.
+func viewExam(e *exam, notes map[string]string) examView {
+	v := examView{ID: e.ID, Total: e.Total, PassNeeded: passNeeded(e.Total), Correct: e.Correct,
+		Finished: e.FinishedAt != nil, FinishedAt: e.FinishedAt}
+	for i, q := range e.Questions {
+		note, flagged := notes[q.ID]
+		qv := questionView{questionPublic: publicQuestion(q), Pos: i, Flagged: flagged, FlagNote: note}
+		if a, ok := e.Answers[i]; ok {
+			chosen, correct := a.Chosen, q.Answer
+			qv.Chosen, qv.CorrectIndex, qv.Explanation = &chosen, &correct, q.Explanation
+			qv.sourceView = sourceView{URL: q.SourceURL, Label: q.SourceLabel}
+		}
+		v.Questions = append(v.Questions, qv)
+	}
+	return v
+}
+
+// respondExam writes the exam view with the user's flags merged in.
+func (s *server) respondExam(w http.ResponseWriter, r *http.Request, u user, status int, e *exam) error {
+	notes, err := s.st.flagNotes(r.Context(), u.Sub)
+	if err != nil {
+		return err
+	}
+	writeJSON(w, status, viewExam(e, notes))
+	return nil
+}
+
+func (s *server) createExam(w http.ResponseWriter, r *http.Request, u user) error {
+	var body struct {
+		Length int `json:"length"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || !slices.Contains(s.lengths(), body.Length) {
+		return errBadRequest
+	}
+	id, err := s.st.createExam(r.Context(), u.Sub, buildExam(s.bank, body.Length))
+	if err != nil {
+		return err
+	}
+	e, err := s.st.getExam(r.Context(), u.Sub, id)
+	if err != nil {
+		return err
+	}
+	return s.respondExam(w, r, u, http.StatusCreated, e)
+}
+
+func (s *server) getExam(w http.ResponseWriter, r *http.Request, u user) error {
+	e, err := s.st.getExam(r.Context(), u.Sub, r.PathValue("id"))
+	if err != nil {
+		return err
+	}
+	return s.respondExam(w, r, u, http.StatusOK, e)
+}
+
+func (s *server) answer(w http.ResponseWriter, r *http.Request, u user) error {
+	var body struct {
+		Pos    int `json:"pos"`
+		Choice int `json:"choice"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		return errBadRequest
+	}
+	e, err := s.st.answerQuestion(r.Context(), u.Sub, r.PathValue("id"), body.Pos, body.Choice)
+	if err != nil {
+		return err
+	}
+	return s.respondExam(w, r, u, http.StatusOK, e)
+}
+
+func (s *server) stats(w http.ResponseWriter, r *http.Request, u user) error {
+	exams, topics, err := s.st.stats(r.Context(), u.Sub)
+	if err != nil {
+		return err
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"exams": exams, "topics": topics, "pass_percent": passPercent})
+	return nil
+}
+
+// Single-question practice, reachable by link (#/q/<id>). Nothing here is recorded in exam stats.
+
+func (s *server) getQuestion(w http.ResponseWriter, r *http.Request, u user) error {
+	q, ok := s.byID[r.PathValue("id")]
+	if !ok {
+		return errNotFound
+	}
+	notes, err := s.st.flagNotes(r.Context(), u.Sub)
+	if err != nil {
+		return err
+	}
+	note, flagged := notes[q.ID]
+	writeJSON(w, http.StatusOK, questionView{questionPublic: publicQuestion(shuffledCopy(q)), Flagged: flagged, FlagNote: note})
+	return nil
+}
+
+// checkQuestion takes the option text the user picked, so the shuffled order needs no server state.
+func (s *server) checkQuestion(w http.ResponseWriter, r *http.Request, u user) error {
+	q, ok := s.byID[r.PathValue("id")]
+	if !ok {
+		return errNotFound
+	}
+	var body struct {
+		Answer string `json:"answer"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || !slices.Contains(q.Options, body.Answer) {
+		return errBadRequest
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"correct": body.Answer == q.Options[q.Answer], "correct_answer": q.Options[q.Answer], "explanation": q.Explanation,
+		"source_url": q.SourceURL, "source_label": q.SourceLabel,
+	})
+	return nil
+}
+
+// Flags.
+
+func (s *server) listFlags(w http.ResponseWriter, r *http.Request, u user) error {
+	flags, err := s.st.listFlags(r.Context(), u.Sub)
+	if err != nil {
+		return err
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"flags": flags})
+	return nil
+}
+
+func (s *server) putFlag(w http.ResponseWriter, r *http.Request, u user) error {
+	q, ok := s.byID[r.PathValue("id")]
+	if !ok {
+		return errNotFound
+	}
+	var body struct {
+		Note string `json:"note"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || utf8.RuneCountInString(body.Note) > maxNoteLen {
+		return errBadRequest
+	}
+	if err := s.st.setFlag(r.Context(), u.Sub, q.ID, q.Question, strings.TrimSpace(body.Note)); err != nil {
+		return err
+	}
+	w.WriteHeader(http.StatusNoContent)
+	return nil
+}
+
+func (s *server) deleteFlag(w http.ResponseWriter, r *http.Request, u user) error {
+	if err := s.st.deleteFlag(r.Context(), u.Sub, r.PathValue("id")); err != nil {
+		return err
+	}
+	w.WriteHeader(http.StatusNoContent)
+	return nil
+}

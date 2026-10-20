@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="Octagonal red STOP sign">
+  <polygon points="60,10 140,10 190,60 190,140 140,190 60,190 10,140 10,60" fill="#c8102e" stroke="#ffffff" stroke-width="6"/>
+  <polygon points="62,18 138,18 182,62 182,138 138,182 62,182 18,138 18,62" fill="none" stroke="#ffffff" stroke-width="3"/>
+  <text x="100" y="118" text-anchor="middle" font-family="Arial Black, Helvetica, sans-serif" font-size="52" font-weight="900" fill="#ffffff" letter-spacing="3">STOP</text>
+</svg>

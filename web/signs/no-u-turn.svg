@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="White regulatory sign showing a U-turn arrow with a red prohibition slash">
+  <rect x="6" y="6" width="188" height="188" rx="6" fill="#ffffff" stroke="#000000" stroke-width="4"/>
+  <!-- U-turn arrow -->
+  <path d="M 65 150 L 65 100 Q 65 60 100 60 Q 135 60 135 100 L 135 122" stroke="#000000" stroke-width="14" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <polygon points="120,116 135,148 150,116" fill="#000000"/>
+  <!-- Prohibition circle and slash on top -->
+  <circle cx="100" cy="100" r="78" fill="none" stroke="#c8102e" stroke-width="12"/>
+  <line x1="44" y1="44" x2="156" y2="156" stroke="#c8102e" stroke-width="12" stroke-linecap="round"/>
+</svg>
