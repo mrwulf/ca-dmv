@@ -64,6 +64,13 @@ function showError(err) {
 
 const pct = (c, t) => (t ? Math.round((100 * c) / t) : 0);
 const fmtDate = (unix) => new Date(unix * 1000).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+const fmtDateTime = (unix) =>
+  new Date(unix * 1000).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+// Navigation controls share one look: accent text, no underline, a comfortable tap target.
+const navLink = (text, href) => h("a", { class: "navlink", href }, text);
+const navButton = (text, onclick) => h("button", { class: "navlink", onclick }, text);
+const homeLink = () => navLink("Home", "#/");
 
 function sourceLink(label, url) {
   if (!url || !url.startsWith("https://")) return null;
@@ -77,9 +84,9 @@ function flagBox(qid, state, revealed) {
   const note = h("textarea", { rows: "2", maxlength: "500", placeholder: "What seems wrong? (optional)", "aria-label": "Note" });
   note.value = state.flag_note || "";
   const summary = h("summary", {});
-  const status = h("span", { class: "muted", role: "status" });
+  const status = h("p", { class: "muted center", role: "status" });
   const label = () => (state.flagged ? "Flagged for follow-up" : "Think this is wrong? Flag it");
-  const save = h("button", { class: "secondary" });
+  const save = h("button", {});
   const clear = h("button", { class: "secondary" }, "Remove flag");
   const refresh = () => {
     summary.textContent = label();
@@ -109,7 +116,7 @@ function flagBox(qid, state, revealed) {
     }
     refresh();
   });
-  const copy = h("button", { class: "link" }, "Copy link to this question");
+  const copy = h("button", { class: "secondary" }, "Copy link to this question");
   copy.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(`${location.origin}/#/q/${qid}`);
@@ -127,7 +134,7 @@ function flagBox(qid, state, revealed) {
       : h("p", { class: "src" }, "No handbook source found for this question.");
   }
   return h("details", { class: "flagbox", open: state.flagged }, summary,
-    h("div", { class: "stack" }, source, note, h("div", { class: "row2" }, save, clear), h("div", { class: "row" }, copy, status)));
+    h("div", { class: "stack" }, source, note, h("div", { class: "row2" }, save, clear), copy, status));
 }
 
 // ---------- Home ----------
@@ -149,7 +156,7 @@ async function home() {
   show(
     h("div", { class: "topbar" },
       h("div", {}, h("h1", {}, "CA DMV practice"), h("span", { class: "muted" }, `Hi, ${me.name}`)),
-      h("button", { class: "link", onclick: logout }, "Sign out")),
+      navButton("Sign out", logout)),
     active && h("div", { class: "card stack" },
       h("strong", {}, "Exam in progress"),
       h("span", { class: "muted" }, `${active.answered} of ${active.total} answered`),
@@ -158,13 +165,13 @@ async function home() {
       h("button", { onclick: () => start(full).catch(showError) }, `Full practice exam (${full} questions)`),
       h("button", { class: "secondary", onclick: () => start(quick).catch(showError) }, `Quick quiz (${quick} questions)`),
       h("p", { class: "muted center" }, `The DMV pass mark is ${me.pass_percent}%. The number of questions on the real test may differ from this practice exam.`)),
-    h("div", { class: "card" },
+    h("div", { class: "card stack" },
       h("div", { class: "stats" },
         h("div", {}, h("b", {}, String(exams.length)), h("span", {}, "exams taken")),
         h("div", {}, h("b", {}, avg === null ? "–" : `${avg}%`), h("span", {}, "avg, last 5")),
         h("div", {}, h("b", {}, exams.length ? `${pct(passes, exams.length)}%` : "–"), h("span", {}, "passed"))),
-      h("p", {}, h("a", { href: "#/progress" }, "See progress over time →")),
-      h("p", {}, h("a", { href: "#/flagged" }, `Flagged questions (${me.flag_count}) →`))),
+      h("a", { class: "btn secondary", href: "#/progress" }, "See progress over time"),
+      h("a", { class: "btn secondary", href: "#/flagged" }, `Flagged questions (${me.flag_count})`)),
     h("p", { class: "footer muted center" }, [me.version, me.commit].filter(Boolean).join(" · ")),
   );
 }
@@ -231,7 +238,7 @@ function drawQuestion(view, pos, answered, onNext) {
 
   show(
     h("div", { class: "topbar" },
-      h("button", { class: "link", onclick: () => (location.hash = "#/") }, "← Exit"),
+      navButton("← Exit", () => (location.hash = "#/")),
       h("span", { class: "muted" }, `${view.correct} correct so far`)),
     bar((100 * done) / view.total),
     h("div", { class: "meta" }, h("span", {}, `Question ${pos + 1} of ${view.total}`), h("span", {}, topicName(q.topic))),
@@ -270,10 +277,11 @@ async function results(id) {
   };
 
   show(
-    h("div", { class: "topbar" }, h("h1", {}, "Results"), h("a", { href: "#/" }, "Home")),
+    h("div", { class: "topbar" }, h("h1", {}, "Results"), homeLink()),
     h("div", { class: "card center" },
       h("div", { class: `score ${passed ? "pass" : "fail"}` }, `${view.correct} / ${view.total}`),
       h("strong", { class: passed ? "pass" : "fail" }, passed ? "Pass" : "Not yet"),
+      view.finished_at && h("p", { class: "muted" }, fmtDateTime(view.finished_at)),
       view.topic && h("p", { class: "muted" }, `Focused test: ${topicName(view.topic)}`),
       h("p", { class: "muted" }, `${pct(view.correct, view.total)}% · ${view.pass_needed} correct needed to pass (80%)`)),
     h("div", { class: "stack" },
@@ -305,7 +313,7 @@ async function progress() {
   const { exams, topics, mastery, pass_percent: passPercent } = await api("/api/stats");
   const recent = exams.slice(-30);
 
-  const nodes = [h("div", { class: "topbar" }, h("h1", {}, "Progress"), h("a", { href: "#/" }, "Home"))];
+  const nodes = [h("div", { class: "topbar" }, h("h1", {}, "Progress"), homeLink())];
   if (!exams.length) {
     nodes.push(h("div", { class: "card" }, h("p", {}, "Finish an exam to see your progress here.")));
     show(...nodes);
@@ -324,8 +332,8 @@ async function progress() {
     h("h2", {}, "Recent exams"),
     h("div", { class: "list" }, [...exams].reverse().slice(0, 20).map((e) =>
       h("a", { href: `#/results/${e.id}` },
-        h("span", {}, e.topic ? `${fmtDate(e.finished_at)} · ${topicName(e.topic)}` : fmtDate(e.finished_at)),
-        h("span", {}, `${e.correct}/${e.total} · ${pct(e.correct, e.total)}%`)))),
+        h("span", { class: "when" }, e.topic ? `${fmtDateTime(e.finished_at)} · ${topicName(e.topic)}` : fmtDateTime(e.finished_at)),
+        h("span", { class: "result" }, `${e.correct}/${e.total} · ${pct(e.correct, e.total)}%`)))),
   );
   show(...nodes);
 }
@@ -414,10 +422,10 @@ async function deleteTest(id) {
     }
   });
   show(
-    h("div", { class: "topbar" }, h("h1", {}, "Delete this test?"), h("a", { href: `#/results/${id}` }, "Cancel")),
+    h("div", { class: "topbar" }, h("h1", {}, "Delete this test?"), navLink("Cancel", `#/results/${id}`)),
     h("div", { class: "card danger-card stack", role: "alert" },
       h("strong", {}, "Warning: this removes the test and everything counted from it."),
-      h("p", {}, `This is the ${view.correct} of ${view.total} test${view.finished_at ? ` from ${fmtDate(view.finished_at)}` : ""}.`),
+      h("p", {}, `This is the ${view.correct} of ${view.total} test${view.finished_at ? ` from ${fmtDateTime(view.finished_at)}` : ""}.`),
       h("p", {}, "Its score disappears from your progress graph and its answers no longer count toward your topic accuracy, your mastery, or your pass rate."),
       h("p", {}, "You cannot undo this from the app."),
     ),
@@ -454,7 +462,7 @@ async function practice(id) {
       }, text);
     });
     show(
-      h("div", { class: "topbar" }, h("button", { class: "link", onclick: () => history.back() }, "← Back"), h("a", { href: "#/" }, "Home")),
+      h("div", { class: "topbar" }, navButton("← Back", () => history.back()), homeLink()),
       h("div", { class: "meta" }, h("span", {}, "Practice one question"), h("span", {}, topicName(q.topic))),
       q.image && h("img", { class: "sign", src: `/${q.image}`, alt: q.image_alt || "Road sign or marking" }),
       h("p", { class: "q" }, q.text),
@@ -490,7 +498,7 @@ async function flagged() {
     return row;
   });
   show(
-    h("div", { class: "topbar" }, h("h1", {}, "Flagged questions"), h("a", { href: "#/" }, "Home")),
+    h("div", { class: "topbar" }, h("h1", {}, "Flagged questions"), homeLink()),
     flags.length ? list : h("div", { class: "card" }, h("p", {}, "Nothing flagged. Use \"Flag it\" under any answer you think is wrong.")),
   );
 }
