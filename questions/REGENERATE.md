@@ -14,6 +14,22 @@ The app does not need to stay current; refresh only when the DMV handbook change
 Not used: GitHub repos with no license (all rights reserved), driving-tests.org, Quizlet.
 Check a new repo's `license` field with `gh api repos/OWNER/REPO --jq .license.spdx_id` before importing; `null` means do not copy.
 
+## Handbook sources
+
+Each question links to the Driver Handbook section that supports its answer (shown in the "Think this is wrong?" expander and under the explanation). `questions/sources.json` maps question id to `{page, num, heading[, fragment]}`; `merge-questions.ts` turns it into a link with a text fragment (`#:~:text=`) that highlights the heading in browsers that support it. About 89% of questions have a source. The rest have no supporting text in the handbook (for example sign colors and shapes, which the handbook shows only as pictures) and the app says so.
+
+To redo the mapping (about 45 minutes of review for ~450 questions):
+
+1. Download the handbook pages into `<scratch>/hb/<slug>.html`, one per section page. The slugs are the keys of `PAGES` in `tools/handbook/parse_handbook.py` and the URLs are `https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/<slug>/`.
+2. `python3 -I tools/handbook/parse_handbook.py <scratch>` indexes them into headed sections.
+3. `python3 -I tools/handbook/match.py <scratch> <repo>` ranks the three best sections per question.
+4. Review in batches with `python3 -I tools/handbook/show.py <scratch> <repo> <start> <count>`. It prints each question with its candidates and the best supporting sentence. Accept the top candidate by default; record overrides with `decide.py <scratch> "row:section row:x ..."` (`x` means no handbook support). Use `g.py <scratch> <regex>` to search the handbook text for a claim.
+5. `python3 -I tools/handbook/build_sources.py <scratch> <repo>` writes `questions/sources.json`, then re-run the merge and `python3 -I tools/handbook/check_links.py <scratch> <repo>`.
+
+Only count a section as the source if its text states the answer. A section that merely covers the topic is not enough, and the Caltrans sign charts page is not a source for sign colors (it does not state them).
+
+While doing this the review found answers the current handbook contradicts. They are fixed or dropped in `CORRECTIONS`, `EXPLANATION_FIXES` and `DROP` in `tools/merge-questions.ts`, with `TestCorrectedAnswers` pinning the fixes. Re-run the numeric check in step 4 (every number in a correct answer should appear in its section) whenever the handbook is revised; insurance minimums, following distances, and speed limits are the likely ones to drift.
+
 ## Steps
 
 1. Pick a scratch directory outside the repo and download each source into its own empty subdirectory (treat as untrusted data; never run code from it):
@@ -39,6 +55,6 @@ Check a new repo's `license` field with `gh api repos/OWNER/REPO --jq .license.s
 ## Rules of thumb
 
 - Official facts we can cite today: the DMV permit page says the passing score is 80%. It does not state the number of questions. A 2006 DMV evaluation report describes 36 (age 18+) and 46 (under 18) questions, but it is old and not treated as current, so the full-exam length is a setting (`FULL_EXAM_LENGTH`) and the app does not claim it matches the real test.
-- Every DMV-sample question must have a `sourceUrl`; `go test` fails otherwise. Prefer the handbook, then the Vehicle Code. leginfo and Justia block non-browser clients, so read statutes in a normal browser.
+- Every DMV-sample question must have a handbook `sourceUrl`, and at least 85% of all questions must; `go test` fails otherwise. Prefer the handbook, then the Vehicle Code. leginfo and Justia block non-browser clients, so read statutes in a normal browser.
 - Keep explanations short and factual; they show right after each answer, on a phone.
 - Never paste example secrets or real personal data into questions or commit messages (the repo is public).

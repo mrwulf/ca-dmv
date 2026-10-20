@@ -112,3 +112,5 @@ textarea { width: 100%; font: inherit; color: var(--text); background: var(--bg)
 .src a { color: var(--accent); }
 .feedback .src a { color: inherit; }
 details .flagbox { margin: 8px 0; }
+
+[hidden] { display: none !important; }

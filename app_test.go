@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -352,19 +353,47 @@ func TestExamEndpointsFlagAndSource(t *testing.T) {
 	}
 }
 
-func TestDMVQuestionsHaveSources(t *testing.T) {
+func TestSourceLinks(t *testing.T) {
 	bank, _ := loadBank(questionsJSON)
-	n := 0
+	const prefix = "https://www.dmv.ca.gov/portal/handbook/california-driver-handbook/"
+	linked := 0
 	for _, q := range bank {
-		if len(q.Source) >= 10 && q.Source[:10] == "dmv-sample" {
-			n++
-			if q.SourceURL == "" || q.SourceLabel == "" {
-				t.Errorf("%s (%s) has no source link", q.ID, q.Source)
+		isSample := strings.HasPrefix(q.Source, "dmv-sample")
+		if q.SourceURL == "" {
+			if isSample {
+				t.Errorf("%s (%s) is a DMV sample question with no source link", q.ID, q.Source)
 			}
+			continue
+		}
+		linked++
+		if !strings.HasPrefix(q.SourceURL, prefix) || q.SourceLabel == "" {
+			t.Errorf("%s: bad source link %q (label %q)", q.ID, q.SourceURL, q.SourceLabel)
 		}
 	}
-	if n == 0 {
-		t.Fatal("no DMV sample questions found")
+	if share := float64(linked) / float64(len(bank)); share < 0.85 {
+		t.Errorf("only %.0f%% of questions link to the handbook, want at least 85%%", share*100)
+	}
+}
+
+// These answers were out of date or wrong against the current Driver Handbook and were corrected.
+func TestCorrectedAnswers(t *testing.T) {
+	bank, _ := loadBank(questionsJSON)
+	want := map[string]string{
+		"California's minimum liability insurance requirement for bodily injury per person is:": "$30,000",
+		"California's minimum auto liability insurance for property damage is:":                 "$15,000",
+		"When following a motorcycle, you should:":                                              "Follow at least 3 seconds behind",
+		"When you make a U-turn in a residential district, U-turns are legal:":                  "Only if no vehicle is approaching within 200 feet",
+	}
+	for _, q := range bank {
+		if w, ok := want[q.Question]; ok {
+			if got := q.Options[q.Answer]; got != w {
+				t.Errorf("%q: correct answer is %q, want %q", q.Question, got, w)
+			}
+			delete(want, q.Question)
+		}
+	}
+	for q := range want {
+		t.Errorf("question not found: %q", q)
 	}
 }
 

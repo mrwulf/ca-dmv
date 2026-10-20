@@ -13,7 +13,7 @@ Both are used under the MIT License. Each copyright notice and permission notice
 
 Question and answer-option text for the questions with source `dmv-sample-1` to `dmv-sample-4` comes from the California Department of Motor Vehicles' published
 [sample Class C knowledge tests](https://www.dmv.ca.gov/portal/driver-education-and-safety/educational-materials/sample-driver-license-dl-knowledge-tests/),
-© State of California. The answers and explanations for those questions were written for this project from the California Driver Handbook and the Vehicle Code (each question links to its source), not taken from the DMV.
+© State of California. The answers and explanations for those questions were written for this project from the California Driver Handbook, with a link to the supporting handbook section where there is one, not taken from the DMV.
 
 ## Disclaimer
 

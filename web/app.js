@@ -71,8 +71,9 @@ function sourceLink(label, url) {
 }
 
 // flagBox lets the user flag a question for follow-up with an optional note. state is any object
-// with flagged and flag_note, and is updated in place so a redraw shows the current value.
-function flagBox(qid, state) {
+// with flagged and flag_note, and is updated in place so a redraw shows the current value. Once the
+// answer is revealed it also links to the handbook source so the user can check the question.
+function flagBox(qid, state, revealed) {
   const note = h("textarea", { rows: "2", maxlength: "500", placeholder: "What seems wrong? (optional)", "aria-label": "Note" });
   note.value = state.flag_note || "";
   const summary = h("summary", {});
@@ -118,8 +119,15 @@ function flagBox(qid, state) {
     }
   });
   refresh();
+  let source = null;
+  if (revealed) {
+    source = state.source_url && state.source_url.startsWith("https://")
+      ? h("p", { class: "src" }, "Check the source: ",
+        h("a", { href: state.source_url, target: "_blank", rel: "noopener noreferrer" }, state.source_label || "Driver Handbook"))
+      : h("p", { class: "src" }, "No handbook source found for this question.");
+  }
   return h("details", { class: "flagbox", open: state.flagged }, summary,
-    h("div", { class: "stack" }, note, h("div", { class: "row2" }, save, clear), h("div", { class: "row" }, copy, status)));
+    h("div", { class: "stack" }, source, note, h("div", { class: "row2" }, save, clear), h("div", { class: "row" }, copy, status)));
 }
 
 // ---------- Home ----------
@@ -225,7 +233,7 @@ function drawQuestion(view, pos, answered, onNext) {
       h("strong", {}, right ? "Correct" : "Not quite"),
       h("span", {}, answered.explanation),
       sourceLink(answered.source_label, answered.source_url)),
-    answered && flagBox(q.id, q),
+    answered && flagBox(q.id, q, true),
     answered && h("div", { class: "sticky" },
       h("button", { onclick: onNext }, last ? "See results" : "Next question")),
   );
@@ -275,7 +283,7 @@ async function results(id) {
         h("p", { class: "muted" }, q.explanation),
         sourceLink(q.source_label, q.source_url),
         h("p", {}, h("a", { href: `#/q/${q.id}` }, "Try this question again")),
-        flagBox(q.id, q))),
+        flagBox(q.id, q, true))),
   );
 }
 
@@ -341,6 +349,10 @@ function chart(exams, passPercent) {
 async function practice(id) {
   const q = await api(`/api/questions/${id}`);
   const draw = (res, picked) => {
+    if (res) {
+      q.source_url = res.source_url;
+      q.source_label = res.source_label;
+    }
     const buttons = q.options.map((text) => {
       let cls = "opt";
       if (res) cls += text === res.correct_answer ? " right" : text === picked ? " wrong" : " dim";
@@ -367,7 +379,7 @@ async function practice(id) {
         h("span", {}, res.explanation),
         sourceLink(res.source_label, res.source_url)),
       res && h("div", { class: "sticky" }, h("button", { onclick: () => route() }, "Try again")),
-      flagBox(q.id, q),
+      flagBox(q.id, q, !!res),
     );
   };
   draw(null, null);
