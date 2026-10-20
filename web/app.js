@@ -67,6 +67,48 @@ const fmtDate = (unix) => new Date(unix * 1000).toLocaleDateString(undefined, { 
 const fmtDateTime = (unix) =>
   new Date(unix * 1000).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
+// Set when a test has just been finished, so its results page celebrates once. Reopening an old
+// result later does not.
+let celebrateId = null;
+
+// A short burst of confetti on a canvas over the page. Skipped for people who prefer reduced motion.
+function confetti(count) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const canvas = h("canvas", { class: "confetti", "aria-hidden": "true" });
+  document.body.append(canvas);
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = innerWidth * dpr;
+  canvas.height = innerHeight * dpr;
+  const ctx = canvas.getContext("2d");
+  const colors = ["#f59e0b", "#ef4444", "#10b981", "#3b82f6", "#a855f7", "#ec4899"];
+  const bits = Array.from({ length: count }, () => ({
+    x: Math.random() * innerWidth, y: -20 - Math.random() * innerHeight * 0.5,
+    vx: (Math.random() - 0.5) * 4, vy: 2 + Math.random() * 4,
+    w: 6 + Math.random() * 6, h: 8 + Math.random() * 8,
+    r: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3,
+    color: colors[Math.floor(Math.random() * colors.length)],
+  }));
+  const start = performance.now();
+  const frame = (now) => {
+    const t = now - start;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    for (const b of bits) {
+      b.x += b.vx; b.y += b.vy; b.vy += 0.05; b.r += b.vr;
+      ctx.save();
+      ctx.translate(b.x, b.y);
+      ctx.rotate(b.r);
+      ctx.globalAlpha = Math.max(0, Math.min(1, (3600 - t) / 1000));
+      ctx.fillStyle = b.color;
+      ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
+      ctx.restore();
+    }
+    if (t < 3600) requestAnimationFrame(frame);
+    else canvas.remove();
+  };
+  requestAnimationFrame(frame);
+}
+
 // Navigation controls share one look: accent text, no underline, a comfortable tap target.
 const navLink = (text, href) => h("a", { class: "navlink", href }, text);
 const navButton = (text, onclick) => h("button", { class: "navlink", onclick }, text);
@@ -206,8 +248,10 @@ async function exam(id) {
     drawQuestion(view, pos, null, async (choice) => {
       view = await api(`/api/exams/${id}/answer`, { pos, choice });
       drawQuestion(view, pos, view.questions[pos], () => {
-        if (view.finished) location.hash = `#/results/${id}`;
-        else draw();
+        if (view.finished) {
+          celebrateId = id;
+          location.hash = `#/results/${id}`;
+        } else draw();
       });
     });
   };
@@ -235,11 +279,19 @@ function drawQuestion(view, pos, answered, onNext) {
   });
   const right = answered && answered.chosen === answered.correct_index;
   const last = pos === view.total - 1;
+  // Consecutive correct answers ending at the latest answered question.
+  let streak = 0;
+  for (let i = view.questions.length - 1; i >= 0; i--) {
+    const x = view.questions[i];
+    if (x.chosen == null) continue;
+    if (x.chosen !== x.correct_index) break;
+    streak++;
+  }
 
   show(
     h("div", { class: "topbar" },
       navButton("← Exit", () => (location.hash = "#/")),
-      h("span", { class: "muted" }, `${view.correct} correct so far`)),
+      h("span", { class: "muted" }, streak >= 3 ? `${view.correct} correct so far · 🔥 ${streak} in a row` : `${view.correct} correct so far`)),
     bar((100 * done) / view.total),
     h("div", { class: "meta" }, h("span", {}, `Question ${pos + 1} of ${view.total}`), h("span", {}, topicName(q.topic))),
     q.image && h("img", { class: "sign", src: `/${q.image}`, alt: q.image_alt || "Road sign or marking" }),
@@ -264,6 +316,12 @@ async function results(id) {
     return;
   }
   const passed = view.correct >= view.pass_needed;
+  const perfect = view.correct === view.total;
+  if (celebrateId === id) {
+    celebrateId = null;
+    if (perfect) confetti(160);
+    else if (passed) confetti(70);
+  }
   const byTopic = {};
   for (const q of view.questions) {
     const t = (byTopic[q.topic] ||= { c: 0, n: 0 });
@@ -280,7 +338,7 @@ async function results(id) {
     h("div", { class: "topbar" }, h("h1", {}, "Results"), homeLink()),
     h("div", { class: "card center" },
       h("div", { class: `score ${passed ? "pass" : "fail"}` }, `${view.correct} / ${view.total}`),
-      h("strong", { class: passed ? "pass" : "fail" }, passed ? "Pass" : "Not yet"),
+      h("strong", { class: passed ? "pass" : "fail" }, perfect ? "🎉 Perfect score!" : passed ? "🎉 Passed!" : "Not yet"),
       view.finished_at && h("p", { class: "muted" }, fmtDateTime(view.finished_at)),
       view.topic && h("p", { class: "muted" }, `Focused test: ${topicName(view.topic)}`),
       h("p", { class: "muted" }, `${pct(view.correct, view.total)}% · ${view.pass_needed} correct needed to pass (80%)`)),
