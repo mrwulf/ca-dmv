@@ -65,7 +65,7 @@ How it works:
 
 ## Mastery
 
-The Progress screen shows how much of the whole question bank the pupil has mastered. A question is **mastered** when they got it right the last time they saw it (in a finished test that has not been deleted), **missed** when they got it wrong the last time, and **unseen** otherwise. The bar is mastered divided by every question in the bank.
+The My stats screen shows how much of the whole question bank the pupil has mastered. A question is **mastered** when they got it right the last time they saw it (in a finished test that has not been deleted), **missed** when they got it wrong the last time, and **unseen** otherwise. The bar is mastered divided by every question in the bank.
 
 ## Streaks and achievements
 
@@ -74,7 +74,7 @@ The Progress screen shows how much of the whole question bank the pupil has mast
   - 🏆 **New personal best**: a higher percentage than every earlier test of the same length and category, once there are at least two to compare with.
   - 🔥 **Day N of your practice streak**: the first test of a day that makes a streak of 2 or more.
   - 🏅 **Mastery milestone**: the test took overall mastery past 25%, 50%, 75%, or 100%.
-  - ⭐ **Every question mastered in a category**: this test completed a category. Fully mastered categories also get a ⭐ on Progress.
+  - ⭐ **Every question mastered in a category**: this test completed a category. Fully mastered categories also get a ⭐ on My stats.
 - **Confetti** and a **🔥 N in a row** counter during a test are cosmetic and use no stored data.
 
 ## Leaderboard
@@ -87,7 +87,7 @@ What other users can see: first name, mastery, test counts, and the date, time, 
 
 ## Deleting a test
 
-There is no delete button, on purpose. To delete a test, sign in, open that test's results page (from the Recent exams list on Progress), and add `/delete` to the end of the address:
+There is no delete button, on purpose. To delete a test, sign in, open that test's results page (from the Recent exams list on My stats), and add `/delete` to the end of the address:
 
 ```text
 https://dmv.example.com/#/results/<test id>/delete

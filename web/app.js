@@ -362,9 +362,9 @@ async function home() {
         h("div", {}, h("b", {}, String(exams.length)), h("span", {}, "exams taken")),
         h("div", {}, h("b", {}, avg === null ? "–" : `${avg}%`), h("span", {}, "avg, last 5")),
         h("div", {}, h("b", {}, exams.length ? `${pct(passes, exams.length)}%` : "–"), h("span", {}, "passed"))),
-      h("a", { class: "btn secondary", href: "#/progress" }, "See progress over time"),
-      h("a", { class: "btn secondary", href: "#/flagged" }, `Flagged questions (${me.flag_count})`),
-      h("a", { class: "btn secondary", href: "#/leaderboard" }, "Leaderboard")),
+      h("div", { class: "row2" },
+        h("a", { class: "btn secondary", href: "#/progress" }, "My stats"),
+        h("a", { class: "btn secondary", href: "#/leaderboard" }, "Leaderboard"))),
     h("p", { class: "footer muted center" }, [me.version, me.commit].filter(Boolean).join(" · ")),
     h("p", { class: "footer muted center" }, "Handbook illustrations: California Driver's Handbook, California Department of Motor Vehicles, licensed under ",
       h("a", { href: "https://creativecommons.org/licenses/by-nc/4.0/", target: "_blank", rel: "noopener noreferrer" }, "CC BY-NC 4.0"), "."),
@@ -495,7 +495,7 @@ async function results(id) {
     chips.length > 0 && h("div", { class: "badges" }, chips.map((c) => h("div", { class: "badge" }, c))),
     h("div", { class: "stack" },
       h("button", { onclick: () => again(view.total).catch(showError) }, "Take another one"),
-      h("button", { class: "secondary", onclick: () => (location.hash = "#/progress") }, "See progress")),
+      h("button", { class: "secondary", onclick: () => (location.hash = "#/progress") }, "My stats")),
     h("h2", {}, "By topic"),
     Object.entries(byTopic).sort((a, b) => a[1].c / a[1].n - b[1].c / b[1].n).map(([t, s]) =>
       h("div", { class: "topic" },
@@ -520,14 +520,15 @@ const accuracyClass = (p) => (p >= 80 ? "good" : p >= 65 ? "warn" : "bad");
 // ---------- Progress ----------
 
 async function progress() {
-  const { exams, mastery, pass_percent: passPercent } = await api("/api/stats");
-  const nodes = [h("div", { class: "topbar" }, h("h1", {}, "Progress"), homeLink())];
-  if (!exams.length) {
-    nodes.push(h("div", { class: "card" }, h("p", {}, "Finish an exam to see your progress here.")));
-    show(...nodes);
-    return;
+  const [{ exams, mastery, pass_percent: passPercent }, me] = await Promise.all([api("/api/stats"), api("/api/me")]);
+  const nodes = [h("div", { class: "topbar" }, h("h1", {}, "My stats"), homeLink())];
+  if (exams.length) {
+    nodes.push(...progressBody({ exams, mastery, passPercent }, (e) => `#/results/${e.id}`));
+  } else {
+    nodes.push(h("div", { class: "card" }, h("p", {}, "Finish an exam to see your stats here.")));
   }
-  nodes.push(...progressBody({ exams, mastery, passPercent }, (e) => `#/results/${e.id}`));
+  // Flagged questions are rare, so the link lives at the bottom, out of the way.
+  nodes.push(h("a", { class: "btn secondary", href: "#/flagged" }, `Flagged questions (${me.flag_count})`));
   show(...nodes);
 }
 

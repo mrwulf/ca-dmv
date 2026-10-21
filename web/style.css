@@ -155,3 +155,4 @@ p[role="status"]:empty { display: none; }
 .list .plainrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
 .list .plainrow .when { color: var(--text); font-weight: 400; }
 .list .when .sub { display: block; font-weight: 400; font-size: 0.85rem; }
+.list + .btn { margin-top: 20px; }
