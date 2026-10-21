@@ -156,3 +156,4 @@ p[role="status"]:empty { display: none; }
 .list .plainrow .when { color: var(--text); font-weight: 400; }
 .list .when .sub { display: block; font-weight: 400; font-size: 0.85rem; }
 .list + .btn { margin-top: 20px; }
+.list .result .sub { display: block; text-align: right; font-size: 0.85rem; }

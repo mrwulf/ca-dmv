@@ -563,6 +563,7 @@ function progressBody({ exams, mastery, passPercent }, linkFor, who) {
 // ---------- Leaderboard ----------
 
 const BOARD_SORTS = {
+  avg: ["Avg score", (a, b) => b.avg_pct - a.avg_pct || b.mastery_pct - a.mastery_pct],
   mastery: ["Mastery", (a, b) => b.mastery_pct - a.mastery_pct || b.mastered - a.mastered],
   tests: ["Tests", (a, b) => b.tests - a.tests],
   recent: ["Last practiced", (a, b) => b.last_at - a.last_at],
@@ -571,7 +572,7 @@ const BOARD_SORTS = {
 
 async function leaderboard(sort) {
   const { users } = await api("/api/leaderboard");
-  const key = BOARD_SORTS[sort] ? sort : "mastery";
+  const key = BOARD_SORTS[sort] ? sort : "avg";
   const rows = [...users].sort((a, b) => BOARD_SORTS[key][1](a, b) || a.name.localeCompare(b.name));
   show(
     h("div", { class: "topbar" }, h("h1", {}, "Leaderboard"), homeLink()),
@@ -581,7 +582,8 @@ async function leaderboard(sort) {
       h("a", { href: `#/leaderboard/${u.ref}` },
         h("span", { class: "when" }, `${i + 1}. ${u.name}${u.you ? " (you)" : ""}`,
           h("span", { class: "muted sub" }, `${u.tests} ${u.tests === 1 ? "test" : "tests"} · last ${fmtDate(u.last_at)}`)),
-        h("span", { class: "result" }, `${u.mastery_pct}%`)))) :
+        h("span", { class: "result" }, `${u.avg_pct}% avg`,
+          h("span", { class: "muted sub" }, `${u.mastery_pct}% mastered`))))) :
       h("div", { class: "card" }, h("p", {}, "Nobody has finished a test yet.")),
   );
 }

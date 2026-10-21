@@ -526,6 +526,7 @@ type boardUser struct {
 	Ref        string `json:"ref"`
 	Name       string `json:"name"`
 	You        bool   `json:"you"`
+	AvgPct     int    `json:"avg_pct"` // mean score of the last 5 tests
 	MasteryPct int    `json:"mastery_pct"`
 	Mastered   int    `json:"mastered"`
 	Total      int    `json:"total"`
@@ -544,14 +545,18 @@ func (s *server) leaderboard(w http.ResponseWriter, r *http.Request, u user) err
 		if err != nil {
 			return err
 		}
+		avg, err := s.st.avgRecentScore(r.Context(), row.Sub, 5)
+		if err != nil {
+			return err
+		}
 		m := s.mastery(latest)
 		users = append(users, boardUser{
-			Ref: boardRef(row.Sub), Name: firstName(row.Name), You: row.Sub == u.Sub,
+			Ref: boardRef(row.Sub), Name: firstName(row.Name), You: row.Sub == u.Sub, AvgPct: avg,
 			MasteryPct: m.Mastered * 100 / max(m.Total, 1), Mastered: m.Mastered, Total: m.Total,
 			Tests: row.Tests, LastAt: row.LastAt,
 		})
 	}
-	slices.SortStableFunc(users, func(a, b boardUser) int { return b.MasteryPct - a.MasteryPct })
+	slices.SortStableFunc(users, func(a, b boardUser) int { return b.AvgPct - a.AvgPct })
 	writeJSON(w, http.StatusOK, map[string]any{"users": users})
 	return nil
 }

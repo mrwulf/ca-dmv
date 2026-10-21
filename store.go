@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -545,6 +546,31 @@ func (s *store) leaderboardRows(ctx context.Context) ([]boardRow, error) {
 		out = append(out, r)
 	}
 	return out, rows.Err()
+}
+
+// avgRecentScore is the mean of the per-test score percentages of the user's last n finished,
+// non-deleted tests, rounded to a whole percent, the same figure the home screen shows as "avg, last 5".
+func (s *store) avgRecentScore(ctx context.Context, sub string, n int) (int, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT correct, total FROM exams
+		WHERE sub=? AND finished_at IS NOT NULL AND deleted_at IS NULL AND total > 0
+		ORDER BY finished_at DESC, rowid DESC LIMIT ?`, sub, n)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+	sum, count := 0.0, 0
+	for rows.Next() {
+		var correct, total int
+		if err = rows.Scan(&correct, &total); err != nil {
+			return 0, err
+		}
+		sum += float64(correct) * 100 / float64(total)
+		count++
+	}
+	if err = rows.Err(); err != nil || count == 0 {
+		return 0, err
+	}
+	return int(math.Round(sum / float64(count))), nil
 }
 
 // latestAnswers maps each question id to whether the user's most recent answer to it was correct,

@@ -79,7 +79,7 @@ The My stats screen shows how much of the whole question bank the pupil has mast
 
 ## Leaderboard
 
-The Leaderboard button on the home screen (`/#/leaderboard`) is open to any signed-in user. It lists everyone who has finished at least one test, sorted by mastery (buttons switch to tests taken, last practiced, or name). Selecting a user shows their progress page: score chart, mastery, topic bars, and a list of their tests with the date, time and percentage.
+The Leaderboard button on the home screen (`/#/leaderboard`) is open to any signed-in user. It lists everyone who has finished at least one test, sorted by the average score of their last 5 tests by default (buttons switch to mastery, tests taken, last practiced, or name); each row shows both the average and the mastery. Selecting a user shows their progress page: score chart, mastery, topic bars, and a list of their tests with the date, time and percentage.
 
 Only first names are shown, everywhere in the app: the first word of the name the identity provider sends, or the first word of the local part when it only sends an email address. Two people with the same first name are told apart by their results only.
 

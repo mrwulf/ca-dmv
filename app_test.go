@@ -1046,3 +1046,35 @@ func TestMeShowsFirstNameOnly(t *testing.T) {
 		t.Fatalf("/api/me = %d %+v, want name Sam", code, me)
 	}
 }
+
+// The leaderboard's headline number is the mean score of the last 5 finished tests: older tests
+// and deleted ones do not count, and the list is ordered by it.
+func TestLeaderboardAverageOfLastFiveTests(t *testing.T) {
+	c := newAPIClient(t)
+	bank, _ := loadBank(questionsJSON)
+	qs := bank[:4]
+	ace := c.asUser(t, "ace-sub", "Ace")
+	finishExam(t, c.st, "ace-sub", qs, wrongAnswer) // sixth most recent: outside the window
+	for i := 0; i < 5; i++ {
+		finishExam(t, c.st, "ace-sub", qs, rightAnswer)
+	}
+	gone := finishExam(t, c.st, "ace-sub", qs, wrongAnswer)
+	if err := c.st.deleteExam(context.Background(), "ace-sub", gone); err != nil {
+		t.Fatal(err)
+	}
+	finishExam(t, c.st, "user-1", qs, wrongAnswer) // Pat: a single failed test
+
+	var board struct {
+		Users []boardUser `json:"users"`
+	}
+	if code := ace.do("GET", "/api/leaderboard", nil, &board); code != 200 || len(board.Users) != 2 {
+		t.Fatalf("leaderboard = %d %+v", code, board.Users)
+	}
+	first, second := board.Users[0], board.Users[1]
+	if first.Name != "Ace" || first.AvgPct != 100 || first.Tests != 6 {
+		t.Fatalf("Ace should lead with a 100%% average over the last 5 of 6 tests: %+v", first)
+	}
+	if second.Name != "Pat" || second.AvgPct != 0 {
+		t.Fatalf("Pat = %+v, want a 0%% average", second)
+	}
+}
