@@ -119,7 +119,7 @@ func TestLoginFlow(t *testing.T) {
 	res, _ = client.Get(app.URL + "/api/me")
 	var me struct{ Name string }
 	json.NewDecoder(res.Body).Decode(&me)
-	if res.StatusCode != http.StatusOK || me.Name != "Pat Driver" {
+	if res.StatusCode != http.StatusOK || me.Name != "Pat" {
 		t.Fatalf("after login /api/me = %d %+v", res.StatusCode, me)
 	}
 

@@ -309,7 +309,7 @@ func (s *server) me(w http.ResponseWriter, r *http.Request, u user) error {
 	}
 	ver, sha := buildLabel(version, commit)
 	writeJSON(w, http.StatusOK, map[string]any{
-		"name": u.Name, "active_exam": active, "lengths": s.lengths(),
+		"name": firstName(u.Name), "active_exam": active, "lengths": s.lengths(),
 		"pass_percent": passPercent, "flag_count": len(flags), "version": ver, "commit": sha,
 	})
 	return nil
@@ -496,6 +496,27 @@ func (s *server) stats(w http.ResponseWriter, r *http.Request, u user) error {
 // URLs by a hash of their OIDC subject, never the subject itself, and no test ids are ever returned,
 // so another user's individual tests cannot be opened.
 
+// firstName is the only form of a person's name the app shows. The identity provider's name claim
+// is stored as given, and falls back to a username or email address, so an address is cut at "@"
+// and split into words on dots, dashes and underscores before the first word is taken.
+func firstName(full string) string {
+	name := strings.TrimSpace(full)
+	if local, _, isAddress := strings.Cut(name, "@"); isAddress {
+		name = strings.NewReplacer(".", " ", "_", " ", "-", " ", "+", " ").Replace(local)
+	}
+	first := strings.Join(strings.Fields(name), " ")
+	if i := strings.IndexByte(first, ' '); i >= 0 {
+		first = first[:i]
+	}
+	if r := []rune(first); len(r) > 30 {
+		first = string(r[:30])
+	}
+	if first == "" {
+		return "Driver"
+	}
+	return first
+}
+
 func boardRef(sub string) string {
 	sum := sha256.Sum256([]byte("leaderboard:" + sub))
 	return hex.EncodeToString(sum[:8])
@@ -525,7 +546,7 @@ func (s *server) leaderboard(w http.ResponseWriter, r *http.Request, u user) err
 		}
 		m := s.mastery(latest)
 		users = append(users, boardUser{
-			Ref: boardRef(row.Sub), Name: row.Name, You: row.Sub == u.Sub,
+			Ref: boardRef(row.Sub), Name: firstName(row.Name), You: row.Sub == u.Sub,
 			MasteryPct: m.Mastered * 100 / max(m.Total, 1), Mastered: m.Mastered, Total: m.Total,
 			Tests: row.Tests, LastAt: row.LastAt,
 		})
@@ -571,7 +592,7 @@ func (s *server) leaderboardUser(w http.ResponseWriter, r *http.Request, u user)
 		public = append(public, boardExam{FinishedAt: e.FinishedAt, Correct: e.Correct, Total: e.Total, Passed: e.Passed, Topic: e.Topic})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
-		"name": target.Name, "you": target.Sub == u.Sub, "exams": public, "topics": topics,
+		"name": firstName(target.Name), "you": target.Sub == u.Sub, "exams": public, "topics": topics,
 		"pass_percent": passPercent, "mastery": s.mastery(latest),
 	})
 	return nil

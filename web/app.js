@@ -363,7 +363,8 @@ async function home() {
         h("div", {}, h("b", {}, avg === null ? "–" : `${avg}%`), h("span", {}, "avg, last 5")),
         h("div", {}, h("b", {}, exams.length ? `${pct(passes, exams.length)}%` : "–"), h("span", {}, "passed"))),
       h("a", { class: "btn secondary", href: "#/progress" }, "See progress over time"),
-      h("a", { class: "btn secondary", href: "#/flagged" }, `Flagged questions (${me.flag_count})`)),
+      h("a", { class: "btn secondary", href: "#/flagged" }, `Flagged questions (${me.flag_count})`),
+      h("a", { class: "btn secondary", href: "#/leaderboard" }, "Leaderboard")),
     h("p", { class: "footer muted center" }, [me.version, me.commit].filter(Boolean).join(" · ")),
     h("p", { class: "footer muted center" }, "Handbook illustrations: California Driver's Handbook, California Department of Motor Vehicles, licensed under ",
       h("a", { href: "https://creativecommons.org/licenses/by-nc/4.0/", target: "_blank", rel: "noopener noreferrer" }, "CC BY-NC 4.0"), "."),
@@ -558,7 +559,7 @@ function progressBody({ exams, mastery, passPercent }, linkFor, who) {
   ];
 }
 
-// ---------- Leaderboard (not linked from anywhere; open #/leaderboard) ----------
+// ---------- Leaderboard ----------
 
 const BOARD_SORTS = {
   mastery: ["Mastery", (a, b) => b.mastery_pct - a.mastery_pct || b.mastered - a.mastered],

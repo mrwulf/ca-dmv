@@ -906,7 +906,7 @@ func (c *apiClient) asUser(t *testing.T, sub, name string) *apiClient {
 func TestLeaderboard(t *testing.T) {
 	c := newAPIClient(t) // user-1, "Pat"
 	bank, _ := loadBank(questionsJSON)
-	sam := c.asUser(t, "user-2-sub", "Sam")
+	sam := c.asUser(t, "user-2-sub", "Sam Chen")
 	c.asUser(t, "user-3-sub", "Lurker") // signed in, never finished a test
 
 	// Pat answers 6 questions right; Sam answers the same questions wrong, then one test he deletes.
@@ -947,6 +947,9 @@ func TestLeaderboard(t *testing.T) {
 	}
 	if pat.You || !samRow.You {
 		t.Fatalf("you flag should be set only on the viewer: %+v", board.Users)
+	}
+	if strings.Contains(raw.Body.String(), "Chen") {
+		t.Fatalf("leaderboard shows more than the first name: %s", raw.Body.String())
 	}
 	for _, secret := range []string{"user-1", "user-2-sub", "user-3-sub"} {
 		if strings.Contains(raw.Body.String(), secret) {
@@ -1012,5 +1015,34 @@ func TestBuildIDLetsPagesDetectNewReleases(t *testing.T) {
 	}
 	if etag("v1-aaa") == etag("v2-bbb") {
 		t.Fatal("index.html ETag must change with the build, or browsers keep the stale page on 304")
+	}
+}
+
+func TestFirstName(t *testing.T) {
+	for in, want := range map[string]string{
+		"Pat Driver":                 "Pat",
+		"  Maria  del Carmen Ruiz":   "Maria",
+		"Sam":                        "Sam",
+		"pat.driver@example.com":     "pat",
+		"pat_driver+dmv@example.com": "pat",
+		"@example.com":               "Driver",
+		"":                           "Driver",
+		"   ":                        "Driver",
+		"Zoë Müller":                 "Zoë",
+		"Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa Bb": "Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+	} {
+		if got := firstName(in); got != want {
+			t.Errorf("firstName(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+// The signed-in user's own name is shortened too.
+func TestMeShowsFirstNameOnly(t *testing.T) {
+	c := newAPIClient(t)
+	sam := c.asUser(t, "user-9", "Sam Chen")
+	var me struct{ Name string }
+	if code := sam.do("GET", "/api/me", nil, &me); code != 200 || me.Name != "Sam" {
+		t.Fatalf("/api/me = %d %+v, want name Sam", code, me)
 	}
 }
