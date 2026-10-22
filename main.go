@@ -23,7 +23,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-	"unicode/utf8"
 )
 
 //go:embed web
@@ -210,9 +209,6 @@ func (s *server) routes() http.Handler {
 	mux.Handle("GET /api/leaderboard/{ref}", s.api(s.leaderboardUser))
 	mux.Handle("GET /api/questions/{id}", s.api(s.getQuestion))
 	mux.Handle("POST /api/questions/{id}/check", s.api(s.checkQuestion))
-	mux.Handle("GET /api/flags", s.api(s.listFlags))
-	mux.Handle("PUT /api/flags/{id}", s.api(s.putFlag))
-	mux.Handle("DELETE /api/flags/{id}", s.api(s.deleteFlag))
 
 	web, _ := fs.Sub(webFS, "web")
 	build := buildID()
@@ -303,14 +299,10 @@ func (s *server) me(w http.ResponseWriter, r *http.Request, u user) error {
 	if err != nil {
 		return err
 	}
-	flags, err := s.st.listFlags(r.Context(), u.Sub)
-	if err != nil {
-		return err
-	}
 	ver, sha := buildLabel(version, commit)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"name": firstName(u.Name), "active_exam": active, "lengths": s.lengths(),
-		"pass_percent": passPercent, "flag_count": len(flags), "version": ver, "commit": sha,
+		"pass_percent": passPercent, "version": ver, "commit": sha,
 	})
 	return nil
 }
@@ -323,8 +315,6 @@ type sourceView struct {
 type questionView struct {
 	questionPublic
 	Pos          int    `json:"pos"`
-	Flagged      bool   `json:"flagged"`
-	FlagNote     string `json:"flag_note,omitempty"`
 	Chosen       *int   `json:"chosen,omitempty"`
 	CorrectIndex *int   `json:"correct_index,omitempty"`
 	Explanation  string `json:"explanation,omitempty"`
@@ -350,13 +340,11 @@ func publicQuestion(q question) questionPublic {
 }
 
 // viewExam hides the answer and explanation of every question that has not been answered yet.
-// notes holds the user's flagged question ids with their notes.
-func viewExam(e *exam, notes map[string]string) examView {
+func viewExam(e *exam) examView {
 	v := examView{ID: e.ID, Topic: e.Topic, Total: e.Total, PassNeeded: passNeeded(e.Total), Correct: e.Correct,
 		Finished: e.FinishedAt != nil, FinishedAt: e.FinishedAt}
 	for i, q := range e.Questions {
-		note, flagged := notes[q.ID]
-		qv := questionView{questionPublic: publicQuestion(q), Pos: i, Flagged: flagged, FlagNote: note}
+		qv := questionView{questionPublic: publicQuestion(q), Pos: i}
 		if a, ok := e.Answers[i]; ok {
 			chosen, correct := a.Chosen, q.Answer
 			qv.Chosen, qv.CorrectIndex, qv.Explanation = &chosen, &correct, q.Explanation
@@ -368,13 +356,9 @@ func viewExam(e *exam, notes map[string]string) examView {
 	return v
 }
 
-// respondExam writes the exam view with the user's flags merged in.
+// respondExam writes the exam view.
 func (s *server) respondExam(w http.ResponseWriter, r *http.Request, u user, status int, e *exam) error {
-	notes, err := s.st.flagNotes(r.Context(), u.Sub)
-	if err != nil {
-		return err
-	}
-	writeJSON(w, status, viewExam(e, notes))
+	writeJSON(w, status, viewExam(e))
 	return nil
 }
 
@@ -401,7 +385,11 @@ func (s *server) createExam(w http.ResponseWriter, r *http.Request, u user) erro
 	} else if !slices.Contains(s.lengths(), length) {
 		return errBadRequest
 	}
-	id, err := s.st.createExam(r.Context(), u.Sub, buildExam(pool, length), body.Topic)
+	seen, err := s.st.latestAnswers(r.Context(), u.Sub)
+	if err != nil {
+		return err
+	}
+	id, err := s.st.createExam(r.Context(), u.Sub, buildExamFor(pool, length, seen), body.Topic)
 	if err != nil {
 		return err
 	}
@@ -448,11 +436,7 @@ func (s *server) getExam(w http.ResponseWriter, r *http.Request, u user) error {
 	if err != nil {
 		return err
 	}
-	notes, err := s.st.flagNotes(r.Context(), u.Sub)
-	if err != nil {
-		return err
-	}
-	v := viewExam(e, notes)
+	v := viewExam(e)
 	if v.Finished {
 		if v.Mastery, err = s.examMastery(r.Context(), u.Sub, e.ID); err != nil {
 			return err
@@ -617,10 +601,11 @@ type masteryView struct {
 	Topics   []topicMastery `json:"topics"`
 }
 
-// mastery counts a question as mastered when the user's latest answer to it was correct, as missed
-// when it was wrong, and as unseen when they have not answered it. Questions no longer in the bank
-// are ignored.
-func (s *server) mastery(latest map[string]bool) masteryView {
+// mastery counts a question as mastered when the user has answered it right and owes no more
+// correct answers (a missed question needs masteryStreak right answers in a row), as missed while
+// it still owes some, and as unseen when they have not answered it. Questions no longer in the
+// bank are ignored.
+func (s *server) mastery(latest progress) masteryView {
 	v := masteryView{Total: len(s.bank)}
 	perTopic := map[string]*topicMastery{}
 	for _, q := range s.bank {
@@ -631,12 +616,12 @@ func (s *server) mastery(latest map[string]bool) masteryView {
 		}
 		t.Total++
 	}
-	for qid, ok := range latest {
+	for qid, left := range latest {
 		q, inBank := s.byID[qid]
 		if !inBank {
 			continue
 		}
-		if ok {
+		if left == 0 {
 			v.Mastered++
 			perTopic[q.Topic].Mastered++
 		} else {
@@ -666,12 +651,7 @@ func (s *server) getQuestion(w http.ResponseWriter, r *http.Request, u user) err
 	if !ok {
 		return errNotFound
 	}
-	notes, err := s.st.flagNotes(r.Context(), u.Sub)
-	if err != nil {
-		return err
-	}
-	note, flagged := notes[q.ID]
-	writeJSON(w, http.StatusOK, questionView{questionPublic: publicQuestion(shuffledCopy(q)), Flagged: flagged, FlagNote: note})
+	writeJSON(w, http.StatusOK, questionView{questionPublic: publicQuestion(shuffledCopy(q))})
 	return nil
 }
 
@@ -692,43 +672,6 @@ func (s *server) checkQuestion(w http.ResponseWriter, r *http.Request, u user) e
 		"source_url": q.SourceURL, "source_label": q.SourceLabel,
 		"explain_image": q.ExplainImage, "explain_image_alt": q.ExplainImageAlt,
 	})
-	return nil
-}
-
-// Flags.
-
-func (s *server) listFlags(w http.ResponseWriter, r *http.Request, u user) error {
-	flags, err := s.st.listFlags(r.Context(), u.Sub)
-	if err != nil {
-		return err
-	}
-	writeJSON(w, http.StatusOK, map[string]any{"flags": flags})
-	return nil
-}
-
-func (s *server) putFlag(w http.ResponseWriter, r *http.Request, u user) error {
-	q, ok := s.byID[r.PathValue("id")]
-	if !ok {
-		return errNotFound
-	}
-	var body struct {
-		Note string `json:"note"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || utf8.RuneCountInString(body.Note) > maxNoteLen {
-		return errBadRequest
-	}
-	if err := s.st.setFlag(r.Context(), u.Sub, q.ID, q.Question, strings.TrimSpace(body.Note)); err != nil {
-		return err
-	}
-	w.WriteHeader(http.StatusNoContent)
-	return nil
-}
-
-func (s *server) deleteFlag(w http.ResponseWriter, r *http.Request, u user) error {
-	if err := s.st.deleteFlag(r.Context(), u.Sub, r.PathValue("id")); err != nil {
-		return err
-	}
-	w.WriteHeader(http.StatusNoContent)
 	return nil
 }
 

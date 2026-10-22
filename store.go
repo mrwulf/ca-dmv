@@ -51,14 +51,6 @@ CREATE TABLE IF NOT EXISTS exams (
   questions TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS exams_sub ON exams(sub, finished_at);
-CREATE TABLE IF NOT EXISTS flags (
-  sub TEXT NOT NULL REFERENCES users(sub) ON DELETE CASCADE,
-  qid TEXT NOT NULL,
-  question TEXT NOT NULL,
-  note TEXT NOT NULL DEFAULT '',
-  created_at INTEGER NOT NULL,
-  PRIMARY KEY (sub, qid)
-);
 CREATE TABLE IF NOT EXISTS answers (
   exam_id TEXT NOT NULL REFERENCES exams(id) ON DELETE CASCADE,
   pos INTEGER NOT NULL,
@@ -98,7 +90,12 @@ func migrate(db *sql.DB) error {
 	if err := addColumn(db, "sessions", "id_token", "TEXT NOT NULL DEFAULT ''"); err != nil {
 		return err
 	}
-	return addColumn(db, "exams", "topic", "TEXT NOT NULL DEFAULT ''")
+	if err := addColumn(db, "exams", "topic", "TEXT NOT NULL DEFAULT ''"); err != nil {
+		return err
+	}
+	// Question flags were removed; their data goes with the feature.
+	_, err := db.Exec(`DROP TABLE IF EXISTS flags`)
+	return err
 }
 
 func addColumn(db *sql.DB, table, column, ddl string) error {
@@ -417,60 +414,6 @@ func (s *store) stats(ctx context.Context, sub string) ([]examSummary, []topicSt
 	return exams, topics, trows.Err()
 }
 
-// Flags: questions a user wants to follow up on because they think the answer is wrong.
-
-const maxNoteLen = 500
-
-type flag struct {
-	QID       string `json:"qid"`
-	Question  string `json:"question"`
-	Note      string `json:"note"`
-	CreatedAt int64  `json:"created_at"`
-}
-
-// setFlag flags or re-flags a question, replacing the note. The question text is stored so the
-// flag stays readable if the question bank changes later.
-func (s *store) setFlag(ctx context.Context, sub, qid, text, note string) error {
-	_, err := s.db.ExecContext(ctx, `INSERT INTO flags(sub, qid, question, note, created_at) VALUES (?,?,?,?,?)
-		ON CONFLICT(sub, qid) DO UPDATE SET note=excluded.note`, sub, qid, text, note, time.Now().Unix())
-	return err
-}
-
-func (s *store) deleteFlag(ctx context.Context, sub, qid string) error {
-	_, err := s.db.ExecContext(ctx, `DELETE FROM flags WHERE sub=? AND qid=?`, sub, qid)
-	return err
-}
-
-func (s *store) listFlags(ctx context.Context, sub string) ([]flag, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT qid, question, note, created_at FROM flags WHERE sub=? ORDER BY created_at DESC`, sub)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	flags := []flag{}
-	for rows.Next() {
-		var f flag
-		if err = rows.Scan(&f.QID, &f.Question, &f.Note, &f.CreatedAt); err != nil {
-			return nil, err
-		}
-		flags = append(flags, f)
-	}
-	return flags, rows.Err()
-}
-
-// flagNotes maps question id to note for every flagged question of the user.
-func (s *store) flagNotes(ctx context.Context, sub string) (map[string]string, error) {
-	flags, err := s.listFlags(ctx, sub)
-	if err != nil {
-		return nil, err
-	}
-	notes := make(map[string]string, len(flags))
-	for _, f := range flags {
-		notes[f.QID] = f.Note
-	}
-	return notes, nil
-}
-
 // deleteExam marks one of the user's exams as deleted. Its rows stay in the database, but it no
 // longer appears anywhere or counts toward any statistic.
 func (s *store) deleteExam(ctx context.Context, sub, id string) error {
@@ -489,7 +432,7 @@ func (s *store) deleteExam(ctx context.Context, sub, id string) error {
 // masteryAsOf is latestAnswers as of one finished exam: only the user's finished, non-deleted exams
 // up to that one, in the order they were finished. includeSelf says whether the exam itself counts,
 // so comparing the two shows what that exam changed.
-func (s *store) masteryAsOf(ctx context.Context, sub, examID string, includeSelf bool) (map[string]bool, error) {
+func (s *store) masteryAsOf(ctx context.Context, sub, examID string, includeSelf bool) (progress, error) {
 	var finished, rowid int64
 	err := s.db.QueryRowContext(ctx, `SELECT finished_at, rowid FROM exams
 		WHERE id=? AND sub=? AND finished_at IS NOT NULL AND deleted_at IS NULL`, examID, sub).Scan(&finished, &rowid)
@@ -510,14 +453,14 @@ func (s *store) masteryAsOf(ctx context.Context, sub, examID string, includeSelf
 		return nil, err
 	}
 	defer rows.Close()
-	latest := map[string]bool{}
+	latest := progress{}
 	for rows.Next() {
 		var qid string
 		var ok int
 		if err = rows.Scan(&qid, &ok); err != nil {
 			return nil, err
 		}
-		latest[qid] = ok == 1
+		latest.record(qid, ok == 1)
 	}
 	return latest, rows.Err()
 }
@@ -573,23 +516,23 @@ func (s *store) avgRecentScore(ctx context.Context, sub string, n int) (int, err
 	return int(math.Round(sum / float64(count))), nil
 }
 
-// latestAnswers maps each question id to whether the user's most recent answer to it was correct,
-// over their finished exams that are not deleted.
-func (s *store) latestAnswers(ctx context.Context, sub string) (map[string]bool, error) {
+// latestAnswers replays the user's answers, oldest first, over their finished exams that are not
+// deleted, and returns their progress on every question they have answered.
+func (s *store) latestAnswers(ctx context.Context, sub string) (progress, error) {
 	rows, err := s.db.QueryContext(ctx, `SELECT a.qid, a.is_correct FROM answers a JOIN exams e ON e.id = a.exam_id
 		WHERE e.sub=? AND e.finished_at IS NOT NULL AND e.deleted_at IS NULL ORDER BY e.finished_at, e.rowid, a.pos`, sub)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	latest := map[string]bool{}
+	latest := progress{}
 	for rows.Next() {
 		var qid string
 		var ok int
 		if err = rows.Scan(&qid, &ok); err != nil {
 			return nil, err
 		}
-		latest[qid] = ok == 1
+		latest.record(qid, ok == 1)
 	}
 	return latest, rows.Err()
 }

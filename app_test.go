@@ -88,7 +88,7 @@ func TestExamFlow(t *testing.T) {
 	}
 
 	e, _ := st.getExam(ctx, "user-1", id)
-	for _, q := range viewExam(e, nil).Questions {
+	for _, q := range viewExam(e).Questions {
 		if q.CorrectIndex != nil || q.Explanation != "" {
 			t.Fatal("unanswered question leaks its answer")
 		}
@@ -265,7 +265,7 @@ func (c *apiClient) do(method, path string, body any, out any) int {
 	return w.Code
 }
 
-func TestFlagsAndSingleQuestion(t *testing.T) {
+func TestSingleQuestion(t *testing.T) {
 	c := newAPIClient(t)
 	bank, _ := loadBank(questionsJSON)
 	q := bank[0]
@@ -274,7 +274,6 @@ func TestFlagsAndSingleQuestion(t *testing.T) {
 	var qv struct {
 		Options     []string `json:"options"`
 		Explanation string   `json:"explanation"`
-		Flagged     bool     `json:"flagged"`
 	}
 	if code := c.do("GET", path, nil, &qv); code != 200 || len(qv.Options) != len(q.Options) || qv.Explanation != "" {
 		t.Fatalf("get question: %d %+v", code, qv)
@@ -300,37 +299,12 @@ func TestFlagsAndSingleQuestion(t *testing.T) {
 		t.Fatalf("bogus answer = %d", code)
 	}
 
-	// Flag, read back through the question and the list, then unflag.
-	if code := c.do("PUT", "/api/flags/"+q.ID, map[string]string{"note": "  looks wrong  "}, nil); code != 204 {
-		t.Fatalf("put flag = %d", code)
-	}
-	var flags struct{ Flags []flag }
-	c.do("GET", "/api/flags", nil, &flags)
-	if len(flags.Flags) != 1 || flags.Flags[0].Note != "looks wrong" || flags.Flags[0].Question != q.Question {
-		t.Fatalf("flags = %+v", flags)
-	}
-	c.do("GET", path, nil, &qv)
-	if !qv.Flagged {
-		t.Fatal("question should be flagged")
-	}
-	if code := c.do("PUT", "/api/flags/"+q.ID, map[string]string{"note": string(make([]rune, maxNoteLen+1))}, nil); code != 400 {
-		t.Fatalf("oversized note = %d", code)
-	}
-	if code := c.do("PUT", "/api/flags/nope", map[string]string{}, nil); code != 404 {
-		t.Fatalf("flag unknown question = %d", code)
-	}
-	c.do("DELETE", "/api/flags/"+q.ID, nil, nil)
-	c.do("GET", "/api/flags", nil, &flags)
-	if len(flags.Flags) != 0 {
-		t.Fatal("flag not removed")
-	}
 }
 
-func TestExamEndpointsFlagAndSource(t *testing.T) {
+func TestExamEndpointsAndSource(t *testing.T) {
 	c := newAPIClient(t)
 	type qv struct {
 		ID          string `json:"id"`
-		Flagged     bool   `json:"flagged"`
 		Chosen      *int   `json:"chosen"`
 		CorrectIdx  *int   `json:"correct_index"`
 		Explanation string `json:"explanation"`
@@ -355,11 +329,9 @@ func TestExamEndpointsFlagAndSource(t *testing.T) {
 			t.Fatal("exam response leaks answers")
 		}
 	}
-	first := ex.Questions[0].ID
-	c.do("PUT", "/api/flags/"+first, map[string]string{"note": "x"}, nil)
 	var after struct{ Questions []qv }
 	c.do("POST", "/api/exams/"+ex.ID+"/answer", map[string]int{"pos": 0, "choice": 0}, &after)
-	if !after.Questions[0].Flagged || after.Questions[0].CorrectIdx == nil || after.Questions[0].Explanation == "" {
+	if after.Questions[0].CorrectIdx == nil || after.Questions[0].Explanation == "" {
 		t.Fatalf("answered question view = %+v", after.Questions[0])
 	}
 }
@@ -534,8 +506,9 @@ func TestMasteryUsesLatestAnswer(t *testing.T) {
 	var stats struct{ Mastery masteryView }
 	c.do("GET", "/api/stats", nil, &stats)
 	m := stats.Mastery
-	// Latest: q0 right, q1 wrong, q2 right, q3 wrong.
-	if m.Total != len(bank) || m.Mastered != 2 || m.Missed != 2 || m.Unseen != len(bank)-4 {
+	// q0 was never missed so one right answer masters it. q1 was missed last, q2 was missed then
+	// answered right once (2 more needed), q3 was missed twice.
+	if m.Total != len(bank) || m.Mastered != 1 || m.Missed != 3 || m.Unseen != len(bank)-4 {
 		t.Fatalf("mastery = %+v", m)
 	}
 }
@@ -552,6 +525,8 @@ func TestMigrationAddsDeletedAt(t *testing.T) {
 		`CREATE TABLE exams (id TEXT PRIMARY KEY, sub TEXT NOT NULL, created_at INTEGER NOT NULL, finished_at INTEGER, total INTEGER NOT NULL, correct INTEGER NOT NULL DEFAULT 0, questions TEXT NOT NULL)`,
 		`INSERT INTO users VALUES ('u','U',1)`,
 		`INSERT INTO exams VALUES ('e1','u',1,2,1,1,'[]')`,
+		`CREATE TABLE flags (sub TEXT NOT NULL, qid TEXT NOT NULL, question TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', created_at INTEGER NOT NULL, PRIMARY KEY (sub, qid))`,
+		`INSERT INTO flags VALUES ('u','q','Q?','n',1)`,
 	} {
 		if _, err = old.Exec(q); err != nil {
 			t.Fatal(err)
@@ -568,7 +543,11 @@ func TestMigrationAddsDeletedAt(t *testing.T) {
 	if err = st.deleteExam(context.Background(), "u", "e1"); err != nil {
 		t.Fatalf("delete after migration: %v", err)
 	}
-	// Opening again must not try to add the column twice.
+	var n int
+	if err = st.db.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE name='flags'`).Scan(&n); err != nil || n != 0 {
+		t.Fatalf("flags table still present after migration: n=%d err=%v", n, err)
+	}
+	// Opening again must not try to add the column twice or drop the table twice.
 	if _, err = openStore(path); err != nil {
 		t.Fatalf("reopen: %v", err)
 	}
@@ -665,8 +644,10 @@ func TestExamMasteryAndNewTopics(t *testing.T) {
 			freeway = append(freeway, q)
 		}
 	}
-	// First test: every freeway question wrong. Second: every one right, which completes the topic.
+	// First test: every freeway question wrong. Then three right in a row completes the topic.
 	first := finishExam(t, c.st, "user-1", freeway, wrongAnswer)
+	finishExam(t, c.st, "user-1", freeway, rightAnswer)
+	finishExam(t, c.st, "user-1", freeway, rightAnswer)
 	second := finishExam(t, c.st, "user-1", freeway, rightAnswer)
 	third := finishExam(t, c.st, "user-1", freeway, rightAnswer)
 
@@ -719,19 +700,19 @@ func TestMasteryAsOfOrdering(t *testing.T) {
 	wrong := finishExam(t, st, "u", qs, wrongAnswer)
 	right := finishExam(t, st, "u", qs, rightAnswer)
 	q := qs[0].ID
-	check := func(id string, includeSelf, want bool) {
+	check := func(id string, includeSelf bool, want int) {
 		t.Helper()
 		got, err := st.masteryAsOf(ctx, "u", id, includeSelf)
 		if err != nil {
 			t.Fatal(err)
 		}
-		if v, ok := got[q]; (want && !(ok && v)) || (!want && ok && v) {
-			t.Fatalf("masteryAsOf(%s, self=%v)[q] = %v (present %v), want correct=%v", id[:4], includeSelf, v, ok, want)
+		if v, ok := got[q]; !ok || v != want {
+			t.Fatalf("masteryAsOf(%s, self=%v)[q] = %v (present %v), want %v", id[:4], includeSelf, v, ok, want)
 		}
 	}
-	check(wrong, true, false)  // after the wrong test: wrong
-	check(right, false, false) // just before the right test: still wrong
-	check(right, true, true)   // after the right test: right
+	check(wrong, true, masteryStreak)   // after the wrong test: owes the full streak
+	check(right, false, masteryStreak)  // just before the right test: still owes it
+	check(right, true, masteryStreak-1) // after the right test: one down
 	if _, err := st.masteryAsOf(ctx, "other", right, true); err != errNotFound {
 		t.Fatalf("other user read it: %v", err)
 	}
@@ -1076,5 +1057,65 @@ func TestLeaderboardAverageOfLastFiveTests(t *testing.T) {
 	}
 	if second.Name != "Pat" || second.AvgPct != 0 {
 		t.Fatalf("Pat = %+v, want a 0%% average", second)
+	}
+}
+
+func TestMasteryNeedsStreakAfterMiss(t *testing.T) {
+	p := progress{}
+	p.record("a", true)
+	if p["a"] != 0 {
+		t.Fatalf("right first time = %d, want mastered", p["a"])
+	}
+	p.record("a", false)
+	for i := 1; i < masteryStreak; i++ {
+		p.record("a", true)
+		if p["a"] == 0 {
+			t.Fatalf("mastered after %d right answers, want %d", i, masteryStreak)
+		}
+	}
+	p.record("a", true)
+	if p["a"] != 0 {
+		t.Fatalf("after %d right answers = %d, want mastered", masteryStreak, p["a"])
+	}
+	p.record("a", false)
+	p.record("a", true)
+	p.record("a", false)
+	if p["a"] != masteryStreak {
+		t.Fatalf("a miss must reset the streak, got %d", p["a"])
+	}
+}
+
+func TestBuildExamWeights(t *testing.T) {
+	bank, _ := loadBank(questionsJSON)
+	p := progress{}
+	for i, q := range bank[:100] {
+		if i < 50 {
+			p[q.ID] = masteryStreak // learning
+		} else {
+			p[q.ID] = 0 // mastered
+		}
+	}
+	var unseen, learning, mastered, rounds = 0, 0, 0, 300
+	for range rounds {
+		for _, q := range buildExamFor(bank, 36, p) {
+			left, seen := p[q.ID]
+			switch {
+			case !seen:
+				unseen++
+			case left > 0:
+				learning++
+			default:
+				mastered++
+			}
+		}
+	}
+	// Per-question pick rates must rank unseen > learning > mastered, and every group must appear.
+	rate := func(count, size int) float64 { return float64(count) / float64(size*rounds) }
+	ru, rl, rm := rate(unseen, len(bank)-100), rate(learning, 50), rate(mastered, 50)
+	if !(ru > rl && rl > rm && rm > 0) {
+		t.Fatalf("pick rates unseen=%.3f learning=%.3f mastered=%.3f", ru, rl, rm)
+	}
+	if got := buildExamFor(bank, len(bank), p); len(got) != len(bank) {
+		t.Fatalf("full exam = %d questions", len(got))
 	}
 }

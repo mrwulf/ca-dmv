@@ -2,12 +2,12 @@
 
 A small, phone-first practice app for the California Class C written knowledge test.
 
-- Random exams from a bank of about 450 questions: a full practice exam (36 questions by default) or a quick 10. The pass mark is 80%, the figure the DMV publishes.
+- Exams from a bank of about 450 questions: a full practice exam (36 questions by default) or a quick 10. The pass mark is 80%, the figure the DMV publishes.
 - The right answer and an explanation appear right after each answer, with a link to the Driver Handbook section it comes from where the handbook states it, also in the "Think this is wrong?" box.
 - A "🔥 N in a row" streak during a test, and confetti when a test is passed (more for a perfect score; skipped if the device asks for reduced motion).
 - Official illustrations from the Driver Handbook: traffic signals and signs with their questions, and parking, turning, and passing diagrams with the explanation after you answer.
-- After a missed question, take a focused test on that question's category (10 questions from that category only).
-- Flag any question you think is wrong (with an optional note), review the flagged list, and open any question directly by link (`/#/q/<id>`).
+- On the results page, each topic with a missed question has a "Focused test" button on its bar (10 questions from that category only). The single-question practice page still offers one too.
+- Under each answer, a "Source and link" expander shows the handbook source and copies a link that opens that question directly (`/#/q/<id>`).
 - Per-user history: score over time, a mastery bar across all questions, per-topic accuracy (weakest first), and a review of missed questions.
 - Sign in with any OpenID Connect provider (built for Pocket ID). The app keeps only the OIDC subject and display name.
 - One static Go binary, SQLite storage, rootless distroless image.
@@ -61,11 +61,15 @@ How it works:
 - An exam is created server-side with random questions and shuffled options, and stored as a snapshot. Answers and explanations are only sent to the browser after a question is answered.
 - Sessions are random tokens stored hashed in SQLite (30 days, `HttpOnly`, `SameSite=Lax`). Login uses the authorization code flow with PKCE, a nonce, and a state cookie bound to the browser.
 - Starting a new exam marks the user's unfinished one as deleted.
-- Flags are per user and store the question text, so they stay readable if the bank changes. Question ids are a hash of the question text and are stable across regeneration unless the wording changes.
+- Question ids are a hash of the question text and are stable across regeneration unless the wording changes.
 
 ## Mastery
 
-The My stats screen shows how much of the whole question bank the pupil has mastered. A question is **mastered** when they got it right the last time they saw it (in a finished test that has not been deleted), **missed** when they got it wrong the last time, and **unseen** otherwise. The bar is mastered divided by every question in the bank.
+The My stats screen shows how much of the whole question bank the pupil has mastered. A question is **unseen** until they answer it in a finished test that has not been deleted. A question answered right the first time is **mastered**. Once they miss it, it counts as **missed** until they answer it right 3 times in a row (any wrong answer starts the count over). The bar is mastered divided by every question in the bank.
+
+## Question selection
+
+New tests, including focused ones, pick questions by weighted chance: unseen questions are the most likely, missed questions that are not yet mastered again come next, and mastered ones are the least likely but still come up for review. A missed question can come back in the very next test.
 
 ## Streaks and achievements
 
@@ -83,7 +87,7 @@ The Leaderboard button on the home screen (`/#/leaderboard`) is open to any sign
 
 Only first names are shown, everywhere in the app: the first word of the name the identity provider sends, or the first word of the local part when it only sends an email address. Two people with the same first name are told apart by their results only.
 
-What other users can see: first name, mastery, test counts, and the date, time, topic and score of each finished test. They cannot open individual tests or see answers, flags or notes. Deleted tests are left out. Users are addressed by a one-way hash of their subject id, so the page and API never expose it.
+What other users can see: first name, mastery, test counts, and the date, time, topic and score of each finished test. They cannot open individual tests or see answers. Deleted tests are left out. Users are addressed by a one-way hash of their subject id, so the page and API never expose it.
 
 ## Deleting a test
 

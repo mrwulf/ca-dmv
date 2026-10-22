@@ -263,69 +263,31 @@ const navLink = (text, href) => h("a", { class: "navlink", href }, text);
 const navButton = (text, onclick) => h("button", { class: "navlink", onclick }, text);
 const homeLink = () => navLink("Home", "#/");
 
-function sourceLink(label, url) {
-  if (!url || !url.startsWith("https://")) return null;
-  return h("p", { class: "src" }, "Source: ", h("a", { href: url, target: "_blank", rel: "noopener noreferrer" }, label || url));
-}
-
-// flagBox lets the user flag a question for follow-up with an optional note. state is any object
-// with flagged and flag_note, and is updated in place so a redraw shows the current value. Once the
-// answer is revealed it also links to the handbook source so the user can check the question.
-function flagBox(qid, state, revealed) {
-  const note = h("textarea", { rows: "2", maxlength: "500", placeholder: "What seems wrong? (optional)", "aria-label": "Note" });
-  note.value = state.flag_note || "";
-  const summary = h("summary", {});
-  const status = h("p", { class: "muted center", role: "status" });
-  const label = () => (state.flagged ? "Flagged for follow-up" : "Think this is wrong? Flag it");
-  const save = h("button", {});
-  const clear = h("button", { class: "secondary" }, "Remove flag");
-  const refresh = () => {
-    summary.textContent = label();
-    save.textContent = state.flagged ? "Update note" : "Flag this question";
-    clear.hidden = !state.flagged;
-  };
-  save.addEventListener("click", async () => {
+// questionLinks is a small expander under a question: its handbook source (once the answer is
+// revealed) and a link to the question that copies itself when clicked. state needs source_url and
+// source_label.
+function questionLinks(qid, state, revealed) {
+  const url = `${location.origin}/#/q/${qid}`;
+  const link = h("a", { href: url }, "Link to this question");
+  const status = h("span", {});
+  link.addEventListener("click", async (ev) => {
+    ev.preventDefault();
     try {
-      await send("PUT", `/api/flags/${qid}`, { note: note.value });
-      state.flagged = true;
-      state.flag_note = note.value.trim();
-      status.textContent = "Saved";
+      await navigator.clipboard.writeText(url);
+      status.textContent = " (copied)";
     } catch (e) {
-      status.textContent = "Could not save";
-    }
-    refresh();
-  });
-  clear.addEventListener("click", async () => {
-    try {
-      await send("DELETE", `/api/flags/${qid}`);
-      state.flagged = false;
-      state.flag_note = "";
-      note.value = "";
-      status.textContent = "Removed";
-    } catch (e) {
-      status.textContent = "Could not remove";
-    }
-    refresh();
-  });
-  const copy = h("button", { class: "secondary" }, "Copy link to this question");
-  copy.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(`${location.origin}/#/q/${qid}`);
-      status.textContent = "Link copied";
-    } catch (e) {
-      status.textContent = `${location.origin}/#/q/${qid}`;
+      location.hash = `#/q/${qid}`;
     }
   });
-  refresh();
-  let source = null;
+  const parts = [];
   if (revealed) {
-    source = state.source_url && state.source_url.startsWith("https://")
-      ? h("p", { class: "src" }, "Check the source: ",
-        h("a", { href: state.source_url, target: "_blank", rel: "noopener noreferrer" }, state.source_label || "Driver Handbook"))
-      : h("p", { class: "src" }, "No handbook source found for this question.");
+    parts.push(state.source_url && state.source_url.startsWith("https://")
+      ? h("span", {}, "Source: ", h("a", { href: state.source_url, target: "_blank", rel: "noopener noreferrer" }, state.source_label || "Driver Handbook"))
+      : h("span", {}, "No handbook source found"));
   }
-  return h("details", { class: "flagbox", open: state.flagged }, summary,
-    h("div", { class: "stack" }, source, note, h("div", { class: "row2" }, save, clear), copy, status));
+  parts.push(h("span", {}, link, status));
+  return h("details", { class: "linkbox" }, h("summary", {}, "Source and link"),
+    h("p", {}, parts.flatMap((x, i) => (i ? [" · ", x] : [x]))));
 }
 
 // ---------- Home ----------
@@ -453,9 +415,8 @@ function drawQuestion(view, pos, answered, onNext) {
     answered && h("div", { class: `feedback ${right ? "right" : "wrong"}`, role: "status" },
       h("strong", {}, right ? "Correct" : "Not quite"),
       h("span", {}, answered.explanation),
-      explainFigure(answered.explain_image, answered.explain_image_alt),
-      sourceLink(answered.source_label, answered.source_url)),
-    answered && flagBox(q.id, q, true),
+      explainFigure(answered.explain_image, answered.explain_image_alt)),
+    answered && questionLinks(q.id, q, true),
     answered && h("div", { class: "sticky" },
       h("button", { onclick: onNext }, last ? "See results" : "Next question")),
   );
@@ -499,7 +460,10 @@ async function results(id) {
     h("h2", {}, "By topic"),
     Object.entries(byTopic).sort((a, b) => a[1].c / a[1].n - b[1].c / b[1].n).map(([t, s]) =>
       h("div", { class: "topic" },
-        h("div", { class: "row" }, h("span", {}, topicName(t)), h("span", { class: "muted" }, `${s.c}/${s.n}`)),
+        h("div", { class: "row" },
+          h("span", { class: "grow" }, topicName(t)),
+          h("span", { class: "muted" }, `${s.c}/${s.n}`),
+          s.c < s.n ? h("button", { class: "secondary small", onclick: () => startTopicTest(t).catch(showError) }, "Focused test") : null),
         bar(pct(s.c, s.n), accuracyClass(pct(s.c, s.n))))),
     missed.length > 0 && h("h2", {}, `Review missed questions (${missed.length})`),
     missed.map((q) =>
@@ -509,9 +473,7 @@ async function results(id) {
         h("p", {}, h("strong", {}, "Correct: "), q.options[q.correct_index]),
         h("p", { class: "muted" }, q.explanation),
         explainFigure(q.explain_image, q.explain_image_alt),
-        sourceLink(q.source_label, q.source_url),
-        categoryBlock(q.topic),
-        flagBox(q.id, q, true))),
+        questionLinks(q.id, q, true))),
   );
 }
 
@@ -520,15 +482,13 @@ const accuracyClass = (p) => (p >= 80 ? "good" : p >= 65 ? "warn" : "bad");
 // ---------- Progress ----------
 
 async function progress() {
-  const [{ exams, mastery, pass_percent: passPercent }, me] = await Promise.all([api("/api/stats"), api("/api/me")]);
+  const { exams, mastery, pass_percent: passPercent } = await api("/api/stats");
   const nodes = [h("div", { class: "topbar" }, h("h1", {}, "My stats"), homeLink())];
   if (exams.length) {
     nodes.push(...progressBody({ exams, mastery, passPercent }, (e) => `#/results/${e.id}`));
   } else {
     nodes.push(h("div", { class: "card" }, h("p", {}, "Finish an exam to see your stats here.")));
   }
-  // Flagged questions are rare, so the link lives at the bottom, out of the way.
-  nodes.push(h("a", { class: "btn secondary", href: "#/flagged" }, `Flagged questions (${me.flag_count})`));
   show(...nodes);
 }
 
@@ -609,14 +569,14 @@ function categoryBlock(topic) {
     h("button", { class: "secondary", onclick: () => startTopicTest(topic).catch(showError) }, `Take a focused test on ${topicName(topic)}`));
 }
 
-// A question counts as mastered when it was answered correctly the last time it was seen.
+// A question counts as mastered when it was answered right first time, or 3 times in a row after a miss.
 function masteryBar(m, who = "you") {
   const p = pct(m.mastered, m.total);
   return h("div", { class: "card" },
     h("div", { class: "topic" },
       h("div", { class: "row" }, h("strong", {}, `${p}% mastered`), h("span", { class: "muted" }, `${m.mastered} of ${m.total} questions`)),
       bar(p, accuracyClass(p))),
-    h("p", { class: "muted" }, `${m.missed} missed the last time ${who === "you" ? "you saw" : "they saw"} them, ${m.unseen} not seen yet.`),
+    h("p", { class: "muted" }, `${m.missed} still ${who === "you" ? "need" : "needs"} work after a miss, ${m.unseen} not seen yet.`),
     h("p", { class: "muted" }, `⭐ ${m.topics.filter((t) => t.mastered === t.total).length} of ${m.topics.length} topics fully mastered.`));
 }
 
@@ -730,38 +690,12 @@ async function practice(id) {
       res && h("div", { class: `feedback ${res.correct ? "right" : "wrong"}`, role: "status" },
         h("strong", {}, res.correct ? "Correct" : "Not quite"),
         h("span", {}, res.explanation),
-        explainFigure(res.explain_image, res.explain_image_alt),
-        sourceLink(res.source_label, res.source_url)),
+        explainFigure(res.explain_image, res.explain_image_alt)),
       res && categoryBlock(q.topic),
-      flagBox(q.id, q, !!res),
+      questionLinks(q.id, q, !!res),
     );
   };
   draw(null, null);
-}
-
-// ---------- Flagged questions ----------
-
-async function flagged() {
-  const { flags } = await api("/api/flags");
-  const list = flags.map((f) => {
-    const row = h("div", { class: "card stack" },
-      h("strong", {}, f.question),
-      f.note && h("p", { class: "muted" }, `Your note: ${f.note}`),
-      h("div", { class: "row2" },
-        h("a", { class: "btn secondary", href: `#/q/${f.qid}` }, "Practice it"),
-        h("button", {
-          class: "secondary",
-          onclick: async () => {
-            await send("DELETE", `/api/flags/${f.qid}`);
-            row.remove();
-          },
-        }, "Remove flag")));
-    return row;
-  });
-  show(
-    h("div", { class: "topbar" }, h("h1", {}, "Flagged questions"), homeLink()),
-    flags.length ? list : h("div", { class: "card" }, h("p", {}, "Nothing flagged. Use \"Flag it\" under any answer you think is wrong.")),
-  );
 }
 
 // ---------- Router ----------
@@ -775,7 +709,6 @@ function route() {
     "signed-out": () => signedOut(),
     progress: () => progress(),
     leaderboard: () => (id === "sort" ? leaderboard(action) : id ? leaderboardUser(id) : leaderboard()),
-    flagged: () => flagged(),
   };
   const run = (screens[page] && screens[page]()) || home();
   run.catch(showError);
